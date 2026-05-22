@@ -1,9 +1,11 @@
 {% extends 'dating/base.html' %}
 
+{% block auto_refresh %}off{% endblock %}
+
 {% block title %}Chat with {{ other_display }} - University Dating App{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
+<div class="row justify-content-center" data-chat-match-id="{{ match.id }}">
     <div class="col-md-8">
         <div class="card">
             <div class="card-header d-flex align-items-center">
@@ -19,7 +21,7 @@
             </div>
             <div class="card-body" style="height: 400px; overflow-y: auto;" id="chat-messages">
                 {% for message in messages %}
-                    <div class="d-flex {% if message.sender == request.user %}justify-content-end{% else %}justify-content-start{% endif %} mb-3">
+                    <div class="d-flex {% if message.sender == request.user %}justify-content-end{% else %}justify-content-start{% endif %} mb-3" data-message-id="{{ message.id }}">
                         <div class="card {% if message.sender == request.user %}bg-primary text-white{% else %}bg-light{% endif %}" style="max-width: 70%;">
                             <div class="card-body py-2 px-3">
                                 <p class="mb-1">{{ message.content }}</p>

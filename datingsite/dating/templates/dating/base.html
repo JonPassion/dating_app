@@ -88,9 +88,26 @@
             object-fit: cover;
             border-radius: 15px;
         }
+        .live-pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
     </style>
 </head>
-<body>
+<body
+    {% if user.is_authenticated %}
+    data-user-id="{{ user.id }}"
+    data-auto-refresh="{% block auto_refresh %}on{% endblock %}"
+    {% endif %}
+>
     <nav class="navbar navbar-expand-lg navbar-light sticky-top">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{% url 'home' %}">
@@ -109,7 +126,14 @@
                             <a class="nav-link {% if request.resolver_match.url_name == 'browse' %}active{% endif %}" href="{% url 'browse' %}"><i class="bi bi-people"></i> Browse</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'matches' or request.resolver_match.url_name == 'chat' %}active{% endif %}" href="{% url 'matches' %}"><i class="bi bi-chat-dots"></i> Matches</a>
+                            <a class="nav-link {% if request.resolver_match.url_name == 'matches' or request.resolver_match.url_name == 'chat' %}active{% endif %}" href="{% url 'matches' %}">
+                                <i class="bi bi-chat-dots"></i> Matches
+                                <span id="nav-unread-badge" class="badge bg-danger ms-1 d-none">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item d-flex align-items-center ms-2">
+                            <span class="live-pulse me-1" aria-hidden="true"></span>
+                            <small id="live-indicator" class="text-muted" title="Live">Live · 5s</small>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.resolver_match.url_name == 'profile_view' or request.resolver_match.url_name == 'profile_edit' %}active{% endif %}" href="{% url 'profile_view' %}"><i class="bi bi-person"></i> Profile</a>
@@ -149,12 +173,14 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% if user.is_authenticated %}
+    <script src="{% static 'js/realtime.js' %}"></script>
+    {% endif %}
     <script>
-        // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register("{% static 'sw.js' %}")
-                .then(reg => console.log('Service Worker registered'))
-                .catch(err => console.log('Service Worker registration failed'));
+                .then(function () {})
+                .catch(function () {});
         }
     </script>
 </body>
