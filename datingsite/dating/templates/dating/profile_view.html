@@ -1,0 +1,98 @@
+{% extends 'dating/base.html' %}
+
+{% block title %}My Profile - University Dating App{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card p-4">
+            <div class="text-center mb-4">
+                {% if profile.profile_picture %}
+                    <img src="{{ profile.profile_picture.url }}" class="profile-img" alt="{{ profile.user.username }}">
+                {% else %}
+                    <div class="profile-img d-flex align-items-center justify-content-center bg-secondary text-white">
+                        <i class="bi bi-person fs-1"></i>
+                    </div>
+                {% endif %}
+                <h2 class="mt-3">{{ profile.user.username }}</h2>
+                {% if profile.major %}
+                    <p class="text-muted">{{ profile.major }} {% if profile.year %}- Year {{ profile.year }}{% endif %}</p>
+                {% endif %}
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>About Me</h5>
+                    {% if profile.bio %}
+                        <p>{{ profile.bio }}</p>
+                    {% else %}
+                        <p class="text-muted">No bio yet</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <h5>Details</h5>
+                    <ul class="list-unstyled">
+                        {% if profile.age %}
+                            <li><strong>Age:</strong> {{ profile.age }}</li>
+                        {% endif %}
+                        {% if profile.gender %}
+                            <li><strong>Gender:</strong> {{ profile.get_gender_display }}</li>
+                        {% endif %}
+                        {% if profile.looking_for %}
+                            <li><strong>Looking For:</strong> {{ profile.get_looking_for_display }}</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            
+            {% if profile.interests %}
+                <div class="mt-4">
+                    <h5>Interests</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for interest in profile.interests.split|slice:":10" %}
+                            <span class="badge bg-primary">{{ interest }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            {% if media_gallery %}
+                <div class="mt-4">
+                    <h5><i class="bi bi-images"></i> Media Gallery</h5>
+                    <div class="row">
+                        {% for media in media_gallery %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card">
+                                    {% if media.media_type == 'image' %}
+                                        <img src="{{ media.file.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ media.caption }}">
+                                    {% else %}
+                                        <video src="{{ media.file.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" controls></video>
+                                    {% endif %}
+                                    {% if media.caption %}
+                                        <div class="card-body p-2">
+                                            <small class="text-muted">{{ media.caption }}</small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            
+            <div class="mt-4 text-center">
+                <a href="{% url 'profile_edit' %}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

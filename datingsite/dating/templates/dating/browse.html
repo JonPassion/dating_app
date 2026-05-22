@@ -1,0 +1,112 @@
+{% extends 'dating/base.html' %}
+{% load dating_extras %}
+
+{% block title %}Browse - University Dating App{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="d-flex gap-2">
+                    <input type="text" class="form-control" name="search" placeholder="Search by username..." value="{{ search_query }}" autofocus>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                    {% if search_query %}
+                        <a href="{% url 'browse' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-lg"></i> Clear
+                        </a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        {% if user %}
+            <div class="card p-4">
+                <div class="text-center">
+                    {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" class="browse-img mb-3 {% if user.profile.anonymous_mode and not is_matched %}blur-image{% endif %}" alt="{{ display_name }}">
+                    {% else %}
+                        <div class="browse-img d-flex align-items-center justify-content-center bg-secondary text-white mb-3 mx-auto">
+                            <i class="bi bi-person fs-1"></i>
+                        </div>
+                    {% endif %}
+
+                    <h3>{{ display_name }}</h3>
+                    {% if user.profile.anonymous_mode and not is_matched %}
+                        <p class="text-muted small"><i class="bi bi-shield-lock"></i> Anonymous mode — match to reveal identity</p>
+                    {% endif %}
+
+                    {% if is_matched or not user.profile.anonymous_mode %}
+                        {% if user.profile.major %}
+                            <p class="text-muted">{{ user.profile.major }}{% if user.profile.year %} - Year {{ user.profile.year }}{% endif %}</p>
+                        {% endif %}
+                        {% if user.profile.bio %}
+                            <p class="mt-3">{{ user.profile.bio }}</p>
+                        {% endif %}
+                        {% if user.profile.interests %}
+                            <div class="d-flex flex-wrap gap-2 justify-content-center mt-3">
+                                {% for interest in user.profile.interests|comma_split|slice:":5" %}
+                                    <span class="badge bg-primary">{{ interest }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        {% if user.profile.bio %}
+                            <p class="mt-3 text-muted">Bio hidden until match</p>
+                        {% endif %}
+                        {% if user.profile.interests %}
+                            <p class="text-muted small mt-3">Interests hidden until match</p>
+                        {% endif %}
+                    {% endif %}
+
+                    <div class="d-flex gap-3 justify-content-center mt-4">
+                        <form method="post" action="{% url 'dislike_user' user.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-lg" title="Pass">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'like_user' user.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-success btn-lg" title="Like">
+                                <i class="bi bi-heart-fill"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <a href="{% url 'view_profile' user.id %}" class="btn btn-outline-primary mt-3">View Full Profile</a>
+                </div>
+            </div>
+        {% else %}
+            <div class="card text-center p-5">
+                {% if search_query %}
+                    <h3><i class="bi bi-search"></i> No users found</h3>
+                    <p class="text-muted">No users matching "{{ search_query }}" were found.</p>
+                    <a href="{% url 'browse' %}" class="btn btn-primary">Clear Search</a>
+                {% else %}
+                    <h3>No more profiles to browse!</h3>
+                    <p class="text-muted">You've seen everyone for now. Check back later!</p>
+                    <a href="{% url 'matches' %}" class="btn btn-primary">View Your Matches</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+<style>
+.blur-image { filter: blur(10px); }
+</style>
+{% endblock %}

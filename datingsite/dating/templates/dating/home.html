@@ -1,0 +1,20 @@
+{% extends 'dating/base.html' %}
+
+{% block title %}Welcome - University Dating App{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card text-center p-5">
+            <h1 class="display-4 fw-bold mb-4">
+                <i class="bi bi-heart-fill text-danger"></i> UniDate
+            </h1>
+            <p class="lead mb-4">Find your match at university!</p>
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-5">Get Started</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg px-5">Login</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

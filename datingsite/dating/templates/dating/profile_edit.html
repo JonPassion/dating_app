@@ -1,0 +1,166 @@
+{% extends 'dating/base.html' %}
+
+{% block title %}Edit Profile - University Dating App{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <a href="{% url 'profile_view' %}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left"></i> Back to Profile
+        </a>
+    </div>
+</div>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card p-4">
+            <h2 class="text-center mb-4">Edit Your Profile</h2>
+            {% if not profile_complete %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Complete your profile: set gender, who you're looking for, and a bio or major to start browsing.
+                </div>
+            {% endif %}
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.age.id_for_label }}" class="form-label">Age</label>
+                        <input type="number" class="form-control" name="{{ form.age.name }}" id="{{ form.age.id_for_label }}" value="{{ form.age.value|default:'' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.gender.id_for_label }}" class="form-label">Gender</label>
+                        <select class="form-select" name="{{ form.gender.name }}" id="{{ form.gender.id_for_label }}">
+                            <option value="">Select gender</option>
+                            <option value="male" {% if form.gender.value == 'male' %}selected{% endif %}>Male</option>
+                            <option value="female" {% if form.gender.value == 'female' %}selected{% endif %}>Female</option>
+                            <option value="other" {% if form.gender.value == 'other' %}selected{% endif %}>Other</option>
+                            <option value="prefer_not_to_say" {% if form.gender.value == 'prefer_not_to_say' %}selected{% endif %}>Prefer not to say</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.looking_for.id_for_label }}" class="form-label">Looking For</label>
+                    <select class="form-select" name="{{ form.looking_for.name }}" id="{{ form.looking_for.id_for_label }}">
+                        <option value="">Select preference</option>
+                        <option value="male" {% if form.looking_for.value == 'male' %}selected{% endif %}>Male</option>
+                        <option value="female" {% if form.looking_for.value == 'female' %}selected{% endif %}>Female</option>
+                        <option value="both" {% if form.looking_for.value == 'both' %}selected{% endif %}>Both</option>
+                        <option value="other" {% if form.looking_for.value == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.major.id_for_label }}" class="form-label">Major</label>
+                    <input type="text" class="form-control" name="{{ form.major.name }}" id="{{ form.major.id_for_label }}" value="{{ form.major.value|default:'' }}">
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.year.id_for_label }}" class="form-label">Year of Study (1-6)</label>
+                    <input type="number" class="form-control" name="{{ form.year.name }}" id="{{ form.year.id_for_label }}" value="{{ form.year.value|default:'' }}" min="1" max="6">
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label>
+                    <textarea class="form-control" name="{{ form.bio.name }}" id="{{ form.bio.id_for_label }}" rows="4">{{ form.bio.value|default:'' }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.interests.id_for_label }}" class="form-label">Interests (comma-separated)</label>
+                    <textarea class="form-control" name="{{ form.interests.name }}" id="{{ form.interests.id_for_label }}" rows="3" placeholder="e.g., music, sports, reading, coding">{{ form.interests.value|default:'' }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="{{ form.profile_picture.id_for_label }}" class="form-label">Profile Picture</label>
+                    <input type="file" class="form-control" name="{{ form.profile_picture.name }}" id="{{ form.profile_picture.id_for_label }}" accept="image/*">
+                    {% if form.instance.profile_picture %}
+                        <img src="{{ form.instance.profile_picture.url }}" class="profile-img mt-3" alt="Current profile picture">
+                    {% endif %}
+                </div>
+                
+                <hr class="my-4">
+                <h5 class="mb-3"><i class="bi bi-shield-lock"></i> Privacy Settings</h5>
+                
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="{{ form.anonymous_mode.name }}" id="{{ form.anonymous_mode.id_for_label }}" {% if form.anonymous_mode.value %}checked{% endif %}>
+                        <label class="form-check-label" for="{{ form.anonymous_mode.id_for_label }}">
+                            <strong>Anonymous Mode</strong><br>
+                            <small class="text-muted">Hide your username and use anonymous ID. Your profile details will only be revealed after matching.</small>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="{{ form.hide_from_search.name }}" id="{{ form.hide_from_search.id_for_label }}" {% if form.hide_from_search.value %}checked{% endif %}>
+                        <label class="form-check-label" for="{{ form.hide_from_search.id_for_label }}">
+                            <strong>Hide from Browse</strong><br>
+                            <small class="text-muted">Don't appear in other users' browse results. Users can still find you if they directly visit your profile.</small>
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">Save Profile</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card p-4">
+            <h5 class="mb-3"><i class="bi bi-images"></i> Media Gallery</h5>
+            <p class="text-muted small">Upload pictures and videos (up to 20MB)</p>
+            
+            <form method="post" enctype="multipart/form-data" class="mb-4">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ media_form.media_type.id_for_label }}" class="form-label">Media Type</label>
+                        <select class="form-select" name="{{ media_form.media_type.name }}" id="{{ media_form.media_type.id_for_label }}">
+                            <option value="image">Image</option>
+                            <option value="video">Video</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5 mb-3">
+                        <label for="{{ media_form.file.id_for_label }}" class="form-label">File</label>
+                        <input type="file" class="form-control" name="{{ media_form.file.name }}" id="{{ media_form.file.id_for_label }}" accept="image/*,video/*" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ media_form.caption.id_for_label }}" class="form-label">Caption</label>
+                        <input type="text" class="form-control" name="{{ media_form.caption.name }}" id="{{ media_form.caption.id_for_label }}" placeholder="Optional">
+                    </div>
+                </div>
+                <button type="submit" name="upload_media" class="btn btn-success">
+                    <i class="bi bi-upload"></i> Upload Media
+                </button>
+            </form>
+            
+            {% if media_gallery %}
+                <h6 class="mb-3">Your Media</h6>
+                <div class="row">
+                    {% for media in media_gallery %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                {% if media.media_type == 'image' %}
+                                    <img src="{{ media.file.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ media.caption }}">
+                                {% else %}
+                                    <video src="{{ media.file.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" controls></video>
+                                {% endif %}
+                                <div class="card-body p-2">
+                                    {% if media.caption %}
+                                        <small class="text-muted d-block mb-2">{{ media.caption }}</small>
+                                    {% endif %}
+                                    <form method="post" action="{% url 'delete_media' media.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger w-100">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted text-center py-3">No media uploaded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

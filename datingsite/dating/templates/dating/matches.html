@@ -1,0 +1,48 @@
+{% extends 'dating/base.html' %}
+
+{% block title %}Matches - University Dating App{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+<h2 class="text-center text-white mb-4">Your Matches</h2>
+<div class="row">
+    {% if match_entries %}
+        {% for entry in match_entries %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        {% if entry.other_user.profile.profile_picture %}
+                            <img src="{{ entry.other_user.profile.profile_picture.url }}" class="profile-img mb-3" alt="{{ entry.display_name }}">
+                        {% else %}
+                            <div class="profile-img d-flex align-items-center justify-content-center bg-secondary text-white mx-auto mb-3">
+                                <i class="bi bi-person fs-1"></i>
+                            </div>
+                        {% endif %}
+                        <h5>{{ entry.display_name }}</h5>
+                        {% if entry.other_user.profile.major %}
+                            <p class="text-muted small">{{ entry.other_user.profile.major }}</p>
+                        {% endif %}
+                        <a href="{% url 'chat' entry.match.id %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-chat-dots"></i> Chat
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="card text-center p-5">
+                <h3>No matches yet!</h3>
+                <p class="text-muted">Start browsing to find your matches.</p>
+                <a href="{% url 'browse' %}" class="btn btn-primary">Start Browsing</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
