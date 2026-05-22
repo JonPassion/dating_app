@@ -102,7 +102,13 @@ To customize for your university:
 
 ## Deploy on Render (free tier)
 
-One-click style deploy with the included Blueprint:
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/JonPassion/dating_app)
+
+**One-click:** sign in to Render, then open the button above (or [this link](https://render.com/deploy?repo=https://github.com/JonPassion/dating_app)) and click **Apply**.
+
+Full steps: see [RENDER_SETUP.md](RENDER_SETUP.md).
+
+Manual Blueprint:
 
 1. Push this repo to GitHub/GitLab.
 2. Open [Render Dashboard](https://dashboard.render.com) → **New** → **Blueprint**.
