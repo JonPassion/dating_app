@@ -4,7 +4,7 @@ Local development settings (SQLite, in-memory cache).
 from .base import *  # noqa: F403
 
 DEBUG = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['dating-app-v6l9.onrender.com', '127.0.0.1', 'localhost']
 
 DATABASES = {
     'default': {
