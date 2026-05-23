@@ -4,7 +4,13 @@ Local development settings (SQLite, in-memory cache).
 from .base import *  # noqa: F403
 
 DEBUG = True
-ALLOWED_HOSTS = ['dating-app-v6l9.onrender.com', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.replit.dev',
+    'https://*.repl.co',
+    'https://*.replit.app',
+]
 
 DATABASES = {
     'default': {
