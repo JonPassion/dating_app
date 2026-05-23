@@ -24,7 +24,16 @@
                     <div class="d-flex {% if message.sender == request.user %}justify-content-end{% else %}justify-content-start{% endif %} mb-3" data-message-id="{{ message.id }}">
                         <div class="card {% if message.sender == request.user %}bg-primary text-white{% else %}bg-light{% endif %}" style="max-width: 70%;">
                             <div class="card-body py-2 px-3">
-                                <p class="mb-1">{{ message.content }}</p>
+                                {% if message.media_file %}
+                                    {% if message.media_type == 'image' %}
+                                        <img src="{{ message.media_file.url }}" class="img-fluid rounded mb-1 chat-media" alt="Shared image" style="max-height: 240px;">
+                                    {% elif message.media_type == 'video' %}
+                                        <video src="{{ message.media_file.url }}" class="rounded mb-1 chat-media" controls style="max-width: 100%; max-height: 240px;"></video>
+                                    {% endif %}
+                                {% endif %}
+                                {% if message.content %}
+                                    <p class="mb-1">{{ message.content }}</p>
+                                {% endif %}
                                 <small class="{% if message.sender == request.user %}text-white-50{% else %}text-muted{% endif %}">
                                     {{ message.created_at|date:"H:i" }}
                                 </small>
@@ -38,10 +47,17 @@
                 {% endfor %}
             </div>
             <div class="card-footer">
-                <form method="post" class="d-flex gap-2">
+                <form id="chat-form" class="d-flex gap-2 align-items-end" enctype="multipart/form-data">
                     {% csrf_token %}
-                    <input type="text" class="form-control" name="content" placeholder="Type a message..." required autofocus>
-                    <button type="submit" class="btn btn-primary">
+                    <input type="file" class="d-none" id="chat-media-input" name="media" accept="image/*,video/*">
+                    <button type="button" class="btn btn-outline-secondary" id="chat-attach-btn" title="Attach image or video">
+                        <i class="bi bi-paperclip"></i>
+                    </button>
+                    <div class="flex-grow-1">
+                        <div id="chat-media-preview" class="small text-muted mb-1 d-none"></div>
+                        <input type="text" class="form-control" id="chat-content-input" name="content" placeholder="Type a message..." autofocus>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="chat-send-btn">
                         <i class="bi bi-send"></i> Send
                     </button>
                 </form>
@@ -50,7 +66,6 @@
     </div>
 </div>
 <script>
-    // Auto-scroll to bottom of chat
     document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
 </script>
 {% endblock %}

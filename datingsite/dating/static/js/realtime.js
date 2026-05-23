@@ -1,17 +1,20 @@
 /**
- * Real-time updates every 5 seconds for authenticated pages.
- * - Chat: polls JSON API (no full page reload)
- * - Other pages: soft reload unless user is typing
+ * Real-time updates for authenticated pages.
+ * - Chat: 1s JSON polling + instant send via API (text, images, videos)
+ * - Other pages: soft reload every 5s unless user is typing
  */
 (function () {
     const INTERVAL_MS = 5000;
+    const CHAT_INTERVAL_MS = 1000;
     const chatEl = document.querySelector('[data-chat-match-id]');
     const chatMatchId = chatEl ? chatEl.dataset.chatMatchId : document.body.dataset.chatMatchId;
     const currentUserId = parseInt(document.body.dataset.userId || '0', 10);
     const autoRefresh = document.body.dataset.autoRefresh !== 'off';
 
     let paused = false;
-    let lastMessageCount = 0;
+    let lastMessageId = 0;
+    let chatInitialized = false;
+    let sending = false;
 
     function setPaused(value) {
         paused = value;
@@ -23,12 +26,25 @@
 
     document.querySelectorAll('input, textarea, select').forEach(function (el) {
         el.addEventListener('focus', function () {
-            setPaused(true);
+            if (!chatMatchId) {
+                setPaused(true);
+            }
         });
         el.addEventListener('blur', function () {
-            setPaused(false);
+            if (!chatMatchId) {
+                setPaused(false);
+            }
         });
     });
+
+    function getCsrfToken() {
+        const input = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (input) {
+            return input.value;
+        }
+        const match = document.cookie.match(/csrftoken=([^;]+)/);
+        return match ? match[1] : '';
+    }
 
     function updateLiveIndicator() {
         const el = document.getElementById('live-indicator');
@@ -79,6 +95,15 @@
         return div.innerHTML;
     }
 
+    function escapeAttr(text) {
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
     function formatTime(isoString) {
         try {
             const d = new Date(isoString);
@@ -88,58 +113,134 @@
         }
     }
 
-    function renderChatMessages(messages) {
+    function renderMessageBody(msg) {
+        let body = '';
+        if (msg.media_url) {
+            if (msg.media_type === 'image') {
+                body +=
+                    '<img src="' +
+                    escapeAttr(msg.media_url) +
+                    '" class="img-fluid rounded mb-1 chat-media" alt="Shared image" style="max-height: 240px;">';
+            } else if (msg.media_type === 'video') {
+                body +=
+                    '<video src="' +
+                    escapeAttr(msg.media_url) +
+                    '" class="rounded mb-1 chat-media" controls style="max-width: 100%; max-height: 240px;"></video>';
+            }
+        }
+        if (msg.content) {
+            body += '<p class="mb-1">' + escapeHtml(msg.content) + '</p>';
+        }
+        return body;
+    }
+
+    function buildMessageHtml(msg) {
+        const isMine = msg.sender && msg.sender.id === currentUserId;
+        const align = isMine ? 'justify-content-end' : 'justify-content-start';
+        const cardClass = isMine ? 'bg-primary text-white' : 'bg-light';
+        const timeClass = isMine ? 'text-white-50' : 'text-muted';
+        return (
+            '<div class="d-flex ' +
+            align +
+            ' mb-3" data-message-id="' +
+            msg.id +
+            '">' +
+            '<div class="card ' +
+            cardClass +
+            '" style="max-width: 70%;">' +
+            '<div class="card-body py-2 px-3">' +
+            renderMessageBody(msg) +
+            '<small class="' +
+            timeClass +
+            '">' +
+            formatTime(msg.created_at) +
+            '</small></div></div></div>'
+        );
+    }
+
+    function scrollChatToBottom(container, force) {
+        const atBottom =
+            container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+        if (force || atBottom) {
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    function syncLastMessageId(container) {
+        const nodes = container.querySelectorAll('[data-message-id]');
+        if (nodes.length) {
+            const lastId = parseInt(nodes[nodes.length - 1].dataset.messageId, 10);
+            if (lastId > lastMessageId) {
+                lastMessageId = lastId;
+            }
+        }
+    }
+
+    function renderChatMessages(messages, incremental) {
         const container = document.getElementById('chat-messages');
         if (!container) return;
 
-        if (!messages.length) {
+        if (!messages.length && !incremental) {
             container.innerHTML =
                 '<div class="text-center text-muted py-5"><p>No messages yet. Start the conversation!</p></div>';
+            lastMessageId = 0;
             return;
         }
 
-        const html = messages
-            .map(function (msg) {
-                const isMine = msg.sender && msg.sender.id === currentUserId;
-                const align = isMine ? 'justify-content-end' : 'justify-content-start';
-                const cardClass = isMine ? 'bg-primary text-white' : 'bg-light';
-                const timeClass = isMine ? 'text-white-50' : 'text-muted';
-                return (
-                    '<div class="d-flex ' +
-                    align +
-                    ' mb-3" data-message-id="' +
-                    msg.id +
-                    '">' +
-                    '<div class="card ' +
-                    cardClass +
-                    '" style="max-width: 70%;">' +
-                    '<div class="card-body py-2 px-3">' +
-                    '<p class="mb-1">' +
-                    escapeHtml(msg.content) +
-                    '</p>' +
-                    '<small class="' +
-                    timeClass +
-                    '">' +
-                    formatTime(msg.created_at) +
-                    '</small></div></div></div>'
-                );
-            })
-            .join('');
+        if (incremental) {
+            messages.forEach(function (msg) {
+                if (container.querySelector('[data-message-id="' + msg.id + '"]')) {
+                    return;
+                }
+                container.insertAdjacentHTML('beforeend', buildMessageHtml(msg));
+                if (msg.id > lastMessageId) {
+                    lastMessageId = msg.id;
+                }
+            });
+            scrollChatToBottom(container, true);
+            return;
+        }
 
         const atBottom =
             container.scrollHeight - container.scrollTop - container.clientHeight < 80;
 
-        container.innerHTML = html;
-
-        if (atBottom || messages.length > lastMessageCount) {
-            container.scrollTop = container.scrollHeight;
+        if (!messages.length) {
+            container.innerHTML =
+                '<div class="text-center text-muted py-5"><p>No messages yet. Start the conversation!</p></div>';
+            lastMessageId = 0;
+            return;
         }
-        lastMessageCount = messages.length;
+
+        container.innerHTML = messages.map(buildMessageHtml).join('');
+        messages.forEach(function (msg) {
+            if (msg.id > lastMessageId) {
+                lastMessageId = msg.id;
+            }
+        });
+        scrollChatToBottom(container, atBottom);
     }
 
-    function pollChat() {
+    function appendOptimisticMessage(msg) {
+        const container = document.getElementById('chat-messages');
+        if (!container) return;
+        const empty = container.querySelector('.text-center.text-muted');
+        if (empty) {
+            container.innerHTML = '';
+        }
+        if (container.querySelector('[data-message-id="' + msg.id + '"]')) {
+            return;
+        }
+        container.insertAdjacentHTML('beforeend', buildMessageHtml(msg));
+        scrollChatToBottom(container, true);
+    }
+
+    function pollChat(incremental) {
         if (!chatMatchId) return Promise.resolve();
-        return fetch('/api/chat/' + chatMatchId + '/', {
+        let url = '/api/chat/' + chatMatchId + '/';
+        if (incremental && lastMessageId > 0) {
+            url += '?after=' + lastMessageId;
+        }
+        return fetch(url, {
             credentials: 'same-origin',
             headers: { Accept: 'application/json' },
         })
@@ -149,10 +250,132 @@
             })
             .then(function (data) {
                 if (data && data.messages) {
-                    renderChatMessages(data.messages);
+                    renderChatMessages(data.messages, !!data.incremental);
                 }
             })
             .catch(function () {});
+    }
+
+    function clearMediaPreview() {
+        const preview = document.getElementById('chat-media-preview');
+        const mediaInput = document.getElementById('chat-media-input');
+        if (preview) {
+            preview.textContent = '';
+            preview.classList.add('d-none');
+        }
+        if (mediaInput) {
+            mediaInput.value = '';
+        }
+    }
+
+    function sendChatMessage(event) {
+        if (event) {
+            event.preventDefault();
+        }
+        if (!chatMatchId || sending) {
+            return;
+        }
+
+        const contentInput = document.getElementById('chat-content-input');
+        const mediaInput = document.getElementById('chat-media-input');
+        const sendBtn = document.getElementById('chat-send-btn');
+        const content = contentInput ? contentInput.value.trim() : '';
+        const mediaFile = mediaInput && mediaInput.files.length ? mediaInput.files[0] : null;
+
+        if (!content && !mediaFile) {
+            return;
+        }
+
+        sending = true;
+        if (sendBtn) {
+            sendBtn.disabled = true;
+        }
+
+        const formData = new FormData();
+        if (content) {
+            formData.append('content', content);
+        }
+        if (mediaFile) {
+            formData.append('media', mediaFile);
+        }
+
+        fetch('/api/chat/' + chatMatchId + '/', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                Accept: 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: formData,
+        })
+            .then(function (r) {
+                return r.json().then(function (data) {
+                    return { ok: r.ok, data: data };
+                });
+            })
+            .then(function (result) {
+                if (!result.ok) {
+                    const err = (result.data && result.data.error) || 'Failed to send message.';
+                    alert(err);
+                    return;
+                }
+                if (contentInput) {
+                    contentInput.value = '';
+                }
+                clearMediaPreview();
+                appendOptimisticMessage(result.data);
+                if (result.data.id > lastMessageId) {
+                    lastMessageId = result.data.id;
+                }
+                pollDashboardStats();
+            })
+            .catch(function () {
+                alert('Failed to send message. Please try again.');
+            })
+            .finally(function () {
+                sending = false;
+                if (sendBtn) {
+                    sendBtn.disabled = false;
+                }
+                if (contentInput) {
+                    contentInput.focus();
+                }
+            });
+    }
+
+    function initChatForm() {
+        const form = document.getElementById('chat-form');
+        const attachBtn = document.getElementById('chat-attach-btn');
+        const mediaInput = document.getElementById('chat-media-input');
+        const preview = document.getElementById('chat-media-preview');
+        const contentInput = document.getElementById('chat-content-input');
+
+        if (form) {
+            form.addEventListener('submit', sendChatMessage);
+        }
+        if (attachBtn && mediaInput) {
+            attachBtn.addEventListener('click', function () {
+                mediaInput.click();
+            });
+            mediaInput.addEventListener('change', function () {
+                if (!preview) return;
+                if (mediaInput.files.length) {
+                    preview.textContent = 'Attached: ' + mediaInput.files[0].name;
+                    preview.classList.remove('d-none');
+                } else {
+                    preview.textContent = '';
+                    preview.classList.add('d-none');
+                }
+            });
+        }
+        if (contentInput) {
+            contentInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendChatMessage();
+                }
+            });
+        }
     }
 
     function tick() {
@@ -161,7 +384,7 @@
         pollDashboardStats();
 
         if (chatMatchId) {
-            pollChat();
+            pollChat(chatInitialized);
         } else if (autoRefresh) {
             window.location.reload();
         }
@@ -173,12 +396,15 @@
             if (chatMatchId) {
                 const container = document.getElementById('chat-messages');
                 if (container) {
-                    lastMessageCount = container.querySelectorAll('[data-message-id]').length;
+                    syncLastMessageId(container);
                 }
-                pollChat();
+                initChatForm();
+                pollChat(false).then(function () {
+                    chatInitialized = true;
+                });
             }
-        }, 500);
+        }, 200);
 
-        setInterval(tick, INTERVAL_MS);
+        setInterval(tick, chatMatchId ? CHAT_INTERVAL_MS : INTERVAL_MS);
     }
 })();

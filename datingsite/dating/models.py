@@ -119,9 +119,16 @@ class Match(models.Model):
 
 
 class Message(models.Model):
+    MEDIA_TYPES = [
+        ('image', 'Image'),
+        ('video', 'Video'),
+    ]
+
     match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
-    content = models.TextField()
+    content = models.TextField(blank=True, default='')
+    media_type = models.CharField(max_length=10, choices=MEDIA_TYPES, blank=True, default='')
+    media_file = models.FileField(upload_to='chat_media/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     read = models.BooleanField(default=False)
 

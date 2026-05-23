@@ -72,10 +72,19 @@ class MatchSerializer(serializers.ModelSerializer):
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
-    
+    media_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Message
-        fields = ['id', 'match', 'sender', 'content', 'created_at', 'read']
+        fields = ['id', 'match', 'sender', 'content', 'media_type', 'media_url', 'created_at', 'read']
+
+    def get_media_url(self, obj):
+        if not obj.media_file:
+            return None
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(obj.media_file.url)
+        return obj.media_file.url
 
 
 class MediaGallerySerializer(serializers.ModelSerializer):

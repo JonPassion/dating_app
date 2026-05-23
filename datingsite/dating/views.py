@@ -19,6 +19,7 @@ from .utils import (
     get_dashboard_stats,
     invalidate_browse_cache,
     invalidate_dashboard_cache,
+    detect_chat_media_type,
 )
 
 
@@ -281,11 +282,27 @@ def chat(request, match_id):
 
     if request.method == 'POST':
         content = (request.POST.get('content') or '').strip()
-        if content:
+        media_file = request.FILES.get('media')
+        media_type = ''
+
+        if media_file:
+            media_type = detect_chat_media_type(media_file)
+            if not media_type:
+                messages.error(request, 'Unsupported file type. Use an image or video.')
+                return render(request, 'dating/chat.html', {
+                    'match': match,
+                    'other_user': other_user,
+                    'other_display': display_name(other_user, request.user, is_matched=True),
+                    'messages': messages_list,
+                })
+
+        if content or media_file:
             Message.objects.create(
                 match=match,
                 sender=request.user,
                 content=content,
+                media_type=media_type,
+                media_file=media_file if media_file else None,
             )
             invalidate_dashboard_cache(match.user1_id)
             invalidate_dashboard_cache(match.user2_id)

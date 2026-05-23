@@ -25,8 +25,8 @@ class MatchAdmin(admin.ModelAdmin):
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ['sender', 'match', 'created_at', 'read']
-    list_filter = ['created_at', 'read']
+    list_display = ['sender', 'match', 'media_type', 'created_at', 'read']
+    list_filter = ['created_at', 'read', 'media_type']
     search_fields = ['content']
 
 @admin.register(MediaGallery)

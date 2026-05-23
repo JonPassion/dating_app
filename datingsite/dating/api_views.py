@@ -19,6 +19,7 @@ from .utils import (
     invalidate_browse_cache,
     invalidate_dashboard_cache,
     get_dashboard_stats,
+    detect_chat_media_type,
 )
 
 
@@ -178,22 +179,58 @@ def chat_messages(request, match_id):
 
     if request.method == 'POST':
         content = (request.data.get('content') or '').strip()
-        if not content:
-            return Response({'error': 'Content is required'}, status=status.HTTP_400_BAD_REQUEST)
-        message = Message.objects.create(match=match, sender=request.user, content=content)
+        media_file = request.FILES.get('media') or request.FILES.get('media_file')
+        if not content and not media_file:
+            return Response(
+                {'error': 'Message text or media is required'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        media_type = ''
+        if media_file:
+            media_type = detect_chat_media_type(media_file)
+            if not media_type:
+                return Response(
+                    {'error': 'Unsupported file type. Use an image or video.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        message = Message.objects.create(
+            match=match,
+            sender=request.user,
+            content=content,
+            media_type=media_type,
+            media_file=media_file if media_file else None,
+        )
         invalidate_dashboard_cache(match.user1_id)
         invalidate_dashboard_cache(match.user2_id)
-        return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
+        return Response(
+            MessageSerializer(message, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
 
     messages_qs = Message.objects.filter(match=match).order_by('created_at')
     messages_qs.filter(read=False).exclude(sender=request.user).update(read=True)
 
+    after = request.query_params.get('after')
+    incremental = False
+    if after:
+        try:
+            after_id = int(after)
+            messages_qs = messages_qs.filter(id__gt=after_id)
+            incremental = True
+        except (TypeError, ValueError):
+            pass
+
     other_user = match.user2 if match.user1 == request.user else match.user1
 
     return Response({
-        'messages': MessageSerializer(messages_qs, many=True).data,
+        'messages': MessageSerializer(
+            messages_qs, many=True, context={'request': request}
+        ).data,
         'other_user': UserSerializer(other_user).data,
         'match_id': match.id,
+        'incremental': incremental,
     })
 
 

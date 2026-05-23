@@ -124,3 +124,24 @@ def get_dashboard_stats(user):
 
 def invalidate_dashboard_cache(user_id):
     cache.delete(f'dashboard:stats:{user_id}')
+
+
+CHAT_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+CHAT_VIDEO_EXTENSIONS = {'.mp4', '.webm', '.mov', '.m4v'}
+
+
+def detect_chat_media_type(uploaded_file):
+    """Return 'image' or 'video' for supported chat attachments, else None."""
+    content_type = (getattr(uploaded_file, 'content_type', '') or '').lower()
+    if content_type.startswith('image/'):
+        return 'image'
+    if content_type.startswith('video/'):
+        return 'video'
+
+    name = (getattr(uploaded_file, 'name', '') or '').lower()
+    ext = '.' + name.rsplit('.', 1)[-1] if '.' in name else ''
+    if ext in CHAT_IMAGE_EXTENSIONS:
+        return 'image'
+    if ext in CHAT_VIDEO_EXTENSIONS:
+        return 'video'
+    return None
