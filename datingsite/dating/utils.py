@@ -89,6 +89,97 @@ def get_next_browse_user(user, search_query=''):
     return User.objects.select_related('profile').get(pk=chosen_id)
 
 
+def get_all_browse_users(user, search_query=''):
+    """
+    Return all eligible browse users sorted by relevance:
+      1. Same campus AND matches preference
+      2. Matches preference only
+      3. Same campus only
+      4. Everyone else
+    Users the current user already liked are shown last with a flag.
+    """
+    profile = get_user_profile(user)
+    my_campus = (profile.campus or '').strip().lower()
+    my_looking_for = profile.looking_for or ''
+
+    excluded_ids = {user.id}
+    hidden_ids = set(
+        UserProfile.objects.filter(hide_from_search=True).values_list('user_id', flat=True)
+    )
+    liked_ids = set(
+        Like.objects.filter(from_user=user).values_list('to_user_id', flat=True)
+    )
+    passed_ids = set(
+        Pass.objects.filter(from_user=user).values_list('to_user_id', flat=True)
+    )
+
+    qs = (
+        User.objects.filter(profile__isnull=False)
+        .exclude(id__in=excluded_ids | hidden_ids)
+        .select_related('profile')
+    )
+
+    if search_query:
+        qs = qs.filter(username__icontains=search_query)
+
+    all_users = list(qs)
+
+    def sort_key(u):
+        p = u.profile
+        campus_match = bool(
+            my_campus
+            and (p.campus or '').strip().lower()
+            and (p.campus or '').strip().lower() == my_campus
+        )
+        pref_match = (
+            not my_looking_for
+            or my_looking_for == 'both'
+            or p.gender == my_looking_for
+        )
+        already_liked = u.id in liked_ids
+        already_passed = u.id in passed_ids
+
+        if already_liked or already_passed:
+            tier = 4
+        elif campus_match and pref_match:
+            tier = 0
+        elif pref_match:
+            tier = 1
+        elif campus_match:
+            tier = 2
+        else:
+            tier = 3
+
+        return (tier, u.username.lower())
+
+    all_users.sort(key=sort_key)
+
+    enriched = []
+    for u in all_users:
+        p = u.profile
+        campus_match = bool(
+            my_campus
+            and (p.campus or '').strip().lower()
+            and (p.campus or '').strip().lower() == my_campus
+        )
+        pref_match = (
+            not my_looking_for
+            or my_looking_for == 'both'
+            or p.gender == my_looking_for
+        )
+        already_liked = u.id in liked_ids
+        already_passed = u.id in passed_ids
+        enriched.append({
+            'user': u,
+            'campus_match': campus_match,
+            'pref_match': pref_match,
+            'already_liked': already_liked,
+            'already_passed': already_passed,
+        })
+
+    return enriched
+
+
 def users_are_matched(user_a, user_b):
     return Match.objects.filter(
         Q(user1=user_a, user2=user_b) | Q(user1=user_b, user2=user_a)

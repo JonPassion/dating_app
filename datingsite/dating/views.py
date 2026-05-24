@@ -14,6 +14,7 @@ from .utils import (
     get_user_profile,
     profile_complete,
     get_next_browse_user,
+    get_all_browse_users,
     users_are_matched,
     display_name,
     get_dashboard_stats,
@@ -192,15 +193,33 @@ def profile_view(request):
 @profile_complete_required
 def browse(request):
     search_query = request.GET.get('search', '').strip()
-    user = get_next_browse_user(request.user, search_query)
-    is_matched = users_are_matched(request.user, user) if user else False
-    display = display_name(user, request.user, is_matched=is_matched) if user else None
+    my_profile = get_user_profile(request.user)
+
+    enriched_users = get_all_browse_users(request.user, search_query)
+
+    matched_ids = set(
+        Match.objects.filter(
+            Q(user1=request.user) | Q(user2=request.user)
+        ).values_list('user1_id', 'user2_id')
+        .__iter__()
+    )
+    flat_matched_ids = set()
+    for pair in Match.objects.filter(
+        Q(user1=request.user) | Q(user2=request.user)
+    ).values_list('user1_id', 'user2_id'):
+        flat_matched_ids.update(pair)
+    flat_matched_ids.discard(request.user.id)
+
+    for entry in enriched_users:
+        u = entry['user']
+        is_matched = u.id in flat_matched_ids
+        entry['is_matched'] = is_matched
+        entry['display_name'] = display_name(u, request.user, is_matched=is_matched)
 
     return render(request, 'dating/browse.html', {
-        'user': user,
-        'is_matched': is_matched,
+        'enriched_users': enriched_users,
         'search_query': search_query,
-        'display_name': display,
+        'my_profile': my_profile,
     })
 
 

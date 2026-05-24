@@ -55,6 +55,13 @@
                     <input type="text" class="form-control" name="{{ form.major.name }}" id="{{ form.major.id_for_label }}" value="{{ form.major.value|default:'' }}">
                 </div>
                 <div class="mb-3">
+                    <label for="{{ form.campus.id_for_label }}" class="form-label">
+                        <i class="bi bi-geo-alt"></i> Campus / Location
+                    </label>
+                    <input type="text" class="form-control" name="{{ form.campus.name }}" id="{{ form.campus.id_for_label }}" value="{{ form.campus.value|default:'' }}" placeholder="e.g., Main Campus, North Campus, City Campus">
+                    <div class="form-text">Users on the same campus will appear first in browse results.</div>
+                </div>
+                <div class="mb-3">
                     <label for="{{ form.year.id_for_label }}" class="form-label">Year of Study (1-6)</label>
                     <input type="number" class="form-control" name="{{ form.year.name }}" id="{{ form.year.id_for_label }}" value="{{ form.year.value|default:'' }}" min="1" max="6">
                 </div>

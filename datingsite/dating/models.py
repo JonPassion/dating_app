@@ -31,6 +31,11 @@ class UserProfile(models.Model):
         choices=[('male', 'Male'), ('female', 'Female'), ('both', 'Both'), ('other', 'Other')],
         blank=True
     )
+    campus = models.CharField(
+        max_length=150,
+        blank=True,
+        help_text="University campus or location"
+    )
     anonymous_mode = models.BooleanField(
         default=True,
         help_text="Hide username and use anonymous ID"
@@ -148,16 +153,16 @@ class MediaGallery(models.Model):
         ('image', 'Image'),
         ('video', 'Video'),
     ]
-    
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='media_gallery')
     media_type = models.CharField(max_length=10, choices=MEDIA_TYPES)
     file = models.FileField(upload_to='media_gallery/')
     caption = models.CharField(max_length=200, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return f"{self.user.username}'s {self.get_media_type_display()}"
 
@@ -167,7 +172,7 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(User, related_name='liked_posts', blank=True)
-    
+
     class Meta:
         ordering = ['-created_at']
         indexes = [
@@ -177,6 +182,6 @@ class Post(models.Model):
 
     def __str__(self):
         return f"Post by {self.user.username}"
-    
+
     def like_count(self):
         return self.likes.count()

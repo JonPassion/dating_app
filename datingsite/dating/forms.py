@@ -13,10 +13,11 @@ class UserRegisterForm(UserCreationForm):
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ['bio', 'major', 'year', 'interests', 'profile_picture', 'age', 'gender', 'looking_for', 'anonymous_mode', 'hide_from_search']
+        fields = ['bio', 'major', 'year', 'interests', 'profile_picture', 'age', 'gender', 'looking_for', 'campus', 'anonymous_mode', 'hide_from_search']
         widgets = {
             'bio': forms.Textarea(attrs={'rows': 4}),
             'interests': forms.Textarea(attrs={'rows': 3, 'placeholder': 'e.g., music, sports, reading, coding'}),
+            'campus': forms.TextInput(attrs={'placeholder': 'e.g., Main Campus, North Campus, City Campus'}),
         }
 
 class MediaUploadForm(forms.ModelForm):
