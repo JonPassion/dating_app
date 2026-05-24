@@ -1,148 +1,107 @@
 {% extends 'dating/base.html' %}
 {% load dating_extras %}
 
-{% block title %}Browse - University Dating App{% endblock %}
+{% block title %}Browse People - UniDate{% endblock %}
 
 {% block content %}
-<div class="row mb-3">
-    <div class="col-12 d-flex align-items-center justify-content-between">
-        <a href="{% url 'dashboard' %}" class="btn btn-outline-light">
-            <i class="bi bi-arrow-left"></i> Back to Dashboard
-        </a>
-        <h4 class="mb-0 text-white">
-            <i class="bi bi-people-fill me-2"></i>Browse Profiles
-        </h4>
-        <span class="badge bg-secondary fs-6">{{ enriched_users|length }} user{{ enriched_users|length|pluralize }}</span>
-    </div>
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h4 class="text-white fw-bold mb-0">Browse People</h4>
+    <span class="badge bg-light text-dark fs-6 px-3 py-2">{{ enriched_users|length }} people</span>
 </div>
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-body py-2">
-                <form method="get" class="d-flex gap-2 align-items-center">
-                    <i class="bi bi-search text-muted ms-1"></i>
-                    <input type="text" class="form-control border-0 shadow-none" name="search"
-                           placeholder="Search by username…" value="{{ search_query }}" autofocus>
-                    <button type="submit" class="btn btn-primary px-4">Search</button>
-                    {% if search_query %}
-                        <a href="{% url 'browse' %}" class="btn btn-outline-secondary">
-                            <i class="bi bi-x-lg"></i> Clear
-                        </a>
-                    {% endif %}
-                </form>
-            </div>
-        </div>
+<div class="card mb-4">
+    <div class="card-body py-2">
+        <form method="get" class="d-flex gap-2 align-items-center">
+            <input type="text" class="form-control border-0 shadow-none"
+                   name="search" placeholder="Search by name…"
+                   value="{{ search_query }}">
+            <button type="submit" class="btn btn-primary px-4">Search</button>
+            {% if search_query %}
+                <a href="{% url 'browse' %}" class="btn btn-outline-secondary">Clear</a>
+            {% endif %}
+        </form>
     </div>
 </div>
 
 {% if my_profile.campus %}
-<div class="alert alert-info d-flex align-items-center gap-2 mb-4">
-    <i class="bi bi-geo-alt-fill"></i>
-    <span>Showing users from <strong>{{ my_profile.campus }}</strong> first, followed by your preference matches.</span>
+<div class="alert alert-light border-0 rounded-3 mb-3 py-2 px-3 small text-muted">
+    Showing people from <strong>{{ my_profile.campus }}</strong> first.
 </div>
 {% else %}
-<div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
-    <i class="bi bi-geo-alt"></i>
-    <span>Add your <a href="{% url 'profile_edit' %}" class="alert-link">campus</a> to see nearby students first.</span>
+<div class="alert alert-warning border-0 rounded-3 mb-3 py-2 px-3 small">
+    Add your <a href="{% url 'profile_edit' %}" class="alert-link">campus</a> to see nearby students first.
 </div>
 {% endif %}
 
 {% if enriched_users %}
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
         {% for entry in enriched_users %}
             {% with u=entry.user p=u.profile %}
             <div class="col">
-                <div class="card h-100 browse-card
-                    {% if entry.campus_match and entry.pref_match %}border-success border-2
-                    {% elif entry.campus_match %}border-info border-2
-                    {% elif entry.pref_match %}border-primary border-2
-                    {% endif %}
-                    {% if entry.already_liked %}opacity-75{% endif %}">
+                <div class="card h-100 text-center">
 
-                    {% if entry.campus_match and entry.pref_match %}
-                        <div class="card-header bg-success text-white py-1 px-2 small fw-semibold">
-                            <i class="bi bi-star-fill me-1"></i>Best match &middot; Same campus
-                        </div>
+                    {% if entry.is_matched %}
+                        <div class="bg-success text-white small py-1 fw-semibold rounded-top">Matched!</div>
+                    {% elif entry.campus_match and entry.pref_match %}
+                        <div class="bg-success text-white small py-1 fw-semibold rounded-top">Near you + your type</div>
                     {% elif entry.campus_match %}
-                        <div class="card-header bg-info text-dark py-1 px-2 small fw-semibold">
-                            <i class="bi bi-geo-alt-fill me-1"></i>Same campus
-                        </div>
+                        <div class="bg-info text-dark small py-1 fw-semibold rounded-top">Same campus</div>
                     {% elif entry.pref_match %}
-                        <div class="card-header bg-primary text-white py-1 px-2 small fw-semibold">
-                            <i class="bi bi-heart me-1"></i>Matches your preference
-                        </div>
+                        <div class="bg-primary text-white small py-1 fw-semibold rounded-top">Your type</div>
                     {% endif %}
 
-                    <div class="text-center pt-3 pb-1 px-2">
+                    <div class="pt-3 pb-2 px-2">
                         {% if p.profile_picture %}
                             <img src="{{ p.profile_picture.url }}"
-                                 class="browse-thumb mb-2 {% if p.anonymous_mode and not entry.is_matched %}blur-image{% endif %}"
-                                 alt="{{ entry.display_name }}">
+                                 style="width:80px;height:80px;border-radius:50%;object-fit:cover;{% if p.anonymous_mode and not entry.is_matched %}filter:blur(6px);{% endif %}"
+                                 class="mb-2" alt="Profile photo">
                         {% else %}
-                            <div class="browse-thumb-placeholder mx-auto mb-2 d-flex align-items-center justify-content-center bg-secondary text-white">
-                                <i class="bi bi-person fs-2"></i>
-                            </div>
+                            <div style="width:80px;height:80px;border-radius:50%;background:#adb5bd;display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:white;margin:0 auto 8px;"
+                                 class="mx-auto">&#128100;</div>
                         {% endif %}
 
-                        <h6 class="mb-0 fw-semibold">{{ entry.display_name }}</h6>
-
-                        {% if p.anonymous_mode and not entry.is_matched %}
-                            <small class="text-muted"><i class="bi bi-shield-lock"></i> Anonymous</small>
-                        {% endif %}
+                        <div class="fw-semibold">{{ entry.display_name }}</div>
 
                         {% if entry.is_matched or not p.anonymous_mode %}
-                            {% if p.major or p.year %}
-                                <p class="text-muted small mb-0 mt-1">
-                                    {{ p.major }}{% if p.major and p.year %} · {% endif %}{% if p.year %}Year {{ p.year }}{% endif %}
-                                </p>
+                            {% if p.major %}
+                                <div class="text-muted small">{{ p.major }}{% if p.year %}, Year {{ p.year }}{% endif %}</div>
                             {% endif %}
                             {% if p.campus %}
-                                <p class="text-muted small mb-0">
-                                    <i class="bi bi-geo-alt"></i> {{ p.campus }}
-                                </p>
+                                <div class="text-muted small">{{ p.campus }}</div>
                             {% endif %}
-                            {% if p.age %}
-                                <p class="text-muted small mb-0">Age {{ p.age }}</p>
-                            {% endif %}
-                            {% if p.interests %}
-                                <div class="d-flex flex-wrap gap-1 justify-content-center mt-2">
-                                    {% for interest in p.interests|comma_split|slice:":3" %}
-                                        <span class="badge bg-secondary small">{{ interest }}</span>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                        {% else %}
+                            <div class="text-muted small">Hidden until matched</div>
                         {% endif %}
 
-                        {% if entry.is_matched %}
-                            <span class="badge bg-success mt-2"><i class="bi bi-check2-circle me-1"></i>Matched!</span>
-                        {% elif entry.already_liked %}
-                            <span class="badge bg-warning text-dark mt-2"><i class="bi bi-heart-fill me-1"></i>Liked</span>
+                        {% if entry.already_liked %}
+                            <span class="badge bg-warning text-dark mt-1">You liked this person</span>
                         {% elif entry.already_passed %}
-                            <span class="badge bg-secondary mt-2"><i class="bi bi-x me-1"></i>Passed</span>
+                            <span class="badge bg-secondary mt-1">Skipped</span>
                         {% endif %}
                     </div>
 
-                    <div class="card-footer bg-transparent border-0 pb-3 pt-1">
-                        <div class="d-flex gap-2 justify-content-center">
-                            {% if not entry.already_liked and not entry.is_matched %}
-                                <form method="post" action="{% url 'dislike_user' u.id %}">
+                    <div class="pb-3 px-2 mt-auto">
+                        {% if entry.is_matched %}
+                            <a href="{% url 'matches' %}" class="btn btn-success w-100 fw-bold">Send a Message</a>
+                        {% elif entry.already_liked %}
+                            <div class="text-muted small mb-1">Waiting for them to like you back</div>
+                            <a href="{% url 'view_profile' u.id %}" class="btn btn-outline-secondary btn-sm w-100">View Profile</a>
+                        {% else %}
+                            <form method="post" action="{% url 'like_user' u.id %}" class="mb-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-like w-100 fw-bold">
+                                    &#10084; Like
+                                </button>
+                            </form>
+                            <div class="d-flex gap-1">
+                                <form method="post" action="{% url 'dislike_user' u.id %}" class="flex-grow-1">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Pass">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
+                                    <button type="submit" class="btn btn-skip w-100">Skip</button>
                                 </form>
-                                <form method="post" action="{% url 'like_user' u.id %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-outline-success btn-sm" title="Like">
-                                        <i class="bi bi-heart-fill"></i>
-                                    </button>
-                                </form>
-                            {% endif %}
-                            <a href="{% url 'view_profile' u.id %}" class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-person"></i> Profile
-                            </a>
-                        </div>
+                                <a href="{% url 'view_profile' u.id %}" class="btn btn-outline-secondary btn-sm">View</a>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -152,38 +111,14 @@
 {% else %}
     <div class="card text-center p-5">
         {% if search_query %}
-            <h3><i class="bi bi-search"></i> No users found</h3>
-            <p class="text-muted">No users matching "{{ search_query }}" were found.</p>
+            <h4>Nobody found for "{{ search_query }}"</h4>
+            <p class="text-muted">Try a different name.</p>
             <a href="{% url 'browse' %}" class="btn btn-primary">Clear Search</a>
         {% else %}
-            <h3>No profiles to browse yet!</h3>
-            <p class="text-muted">Check back later as more students join.</p>
-            <a href="{% url 'matches' %}" class="btn btn-primary">View Your Matches</a>
+            <h4>No one here yet</h4>
+            <p class="text-muted">Check back later as more students join!</p>
         {% endif %}
     </div>
 {% endif %}
 
-<style>
-.browse-thumb {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-.browse-thumb-placeholder {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-}
-.blur-image {
-    filter: blur(6px);
-}
-.browse-card {
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.browse-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-}
-</style>
 {% endblock %}
