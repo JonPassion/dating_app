@@ -18,7 +18,7 @@ urlpatterns = [
     path('chat/<int:match_id>/', views.chat, name='chat'),
     path('profile/<int:user_id>/', views.view_profile, name='view_profile'),
     path('posts/<int:post_id>/like/', views.like_post_view, name='like_post'),
-    
+
     # API Routes
     path('api/auth/register/', api_views.RegisterView.as_view(), name='api_register'),
     path('api/auth/login/', api_views.CustomTokenObtainPairView.as_view(), name='api_login'),
@@ -35,4 +35,5 @@ urlpatterns = [
     path('api/posts/<int:post_id>/like/', api_views.like_post, name='api_like_post'),
     path('api/media/', api_views.MediaGalleryListCreateView.as_view(), name='api_media'),
     path('api/media/<int:pk>/', api_views.MediaGalleryDeleteView.as_view(), name='api_media_delete'),
+    path('api/ping/', api_views.ping_online, name='api_ping'),
 ]

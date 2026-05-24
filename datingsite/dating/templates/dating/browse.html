@@ -44,7 +44,7 @@
                     {% if entry.is_matched %}
                         <div class="bg-success text-white small py-1 fw-semibold rounded-top">Matched!</div>
                     {% elif entry.campus_match and entry.pref_match %}
-                        <div class="bg-success text-white small py-1 fw-semibold rounded-top">Near you + your type</div>
+                        <div class="bg-success text-white small py-1 fw-semibold rounded-top">Near you &amp; your type</div>
                     {% elif entry.campus_match %}
                         <div class="bg-info text-dark small py-1 fw-semibold rounded-top">Same campus</div>
                     {% elif entry.pref_match %}
@@ -52,16 +52,24 @@
                     {% endif %}
 
                     <div class="pt-3 pb-2 px-2">
-                        {% if p.profile_picture %}
-                            <img src="{{ p.profile_picture.url }}"
-                                 style="width:80px;height:80px;border-radius:50%;object-fit:cover;{% if p.anonymous_mode and not entry.is_matched %}filter:blur(6px);{% endif %}"
-                                 class="mb-2" alt="Profile photo">
-                        {% else %}
-                            <div style="width:80px;height:80px;border-radius:50%;background:#adb5bd;display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:white;margin:0 auto 8px;"
-                                 class="mx-auto">&#128100;</div>
-                        {% endif %}
+                        <div class="position-relative d-inline-block mb-2">
+                            {% if p.profile_picture %}
+                                <img src="{{ p.profile_picture.url }}"
+                                     style="width:80px;height:80px;border-radius:50%;object-fit:cover;{% if p.anonymous_mode and not entry.is_matched %}filter:blur(6px);{% endif %}"
+                                     alt="Profile photo">
+                            {% else %}
+                                <div style="width:80px;height:80px;border-radius:50%;background:#adb5bd;display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:white;">&#128100;</div>
+                            {% endif %}
+                            {% if p.is_online %}
+                                <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle"
+                                      style="width:16px;height:16px;" title="Active now"></span>
+                            {% endif %}
+                        </div>
 
                         <div class="fw-semibold">{{ entry.display_name }}</div>
+                        {% if p.is_online %}
+                            <div class="text-success small fw-semibold">&#9679; Active now</div>
+                        {% endif %}
 
                         {% if entry.is_matched or not p.anonymous_mode %}
                             {% if p.major %}
@@ -71,13 +79,13 @@
                                 <div class="text-muted small">{{ p.campus }}</div>
                             {% endif %}
                         {% else %}
-                            <div class="text-muted small">Hidden until matched</div>
+                            <div class="text-muted small fst-italic">Match to see details</div>
                         {% endif %}
 
                         {% if entry.already_liked %}
-                            <span class="badge bg-warning text-dark mt-1">You liked this person</span>
+                            <span class="badge bg-warning text-dark mt-1 small">You liked</span>
                         {% elif entry.already_passed %}
-                            <span class="badge bg-secondary mt-1">Skipped</span>
+                            <span class="badge bg-secondary mt-1 small">Skipped</span>
                         {% endif %}
                     </div>
 
@@ -85,7 +93,7 @@
                         {% if entry.is_matched %}
                             <a href="{% url 'matches' %}" class="btn btn-success w-100 fw-bold">Send a Message</a>
                         {% elif entry.already_liked %}
-                            <div class="text-muted small mb-1">Waiting for them to like you back</div>
+                            <div class="text-muted small mb-1">Waiting for them to like back</div>
                             <a href="{% url 'view_profile' u.id %}" class="btn btn-outline-secondary btn-sm w-100">View Profile</a>
                         {% else %}
                             <form method="post" action="{% url 'like_user' u.id %}" class="mb-2">

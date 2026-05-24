@@ -282,3 +282,13 @@ class MediaGalleryDeleteView(generics.DestroyAPIView):
 
     def get_queryset(self):
         return MediaGallery.objects.filter(user=self.request.user)
+
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def ping_online(request):
+    """Update last_seen timestamp so the user appears active."""
+    from django.utils import timezone
+    UserProfile.objects.filter(user=request.user).update(last_seen=timezone.now())
+    return Response({'status': 'ok'})

@@ -2,70 +2,144 @@
 
 {% block auto_refresh %}off{% endblock %}
 
-{% block title %}Chat with {{ other_display }} - University Dating App{% endblock %}
+{% block title %}Chat with {{ other_display }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center" data-chat-match-id="{{ match.id }}">
     <div class="col-md-8">
         <div class="card">
-            <div class="card-header d-flex align-items-center">
-                <a href="{% url 'matches' %}" class="btn btn-outline-secondary btn-sm me-3">
-                    <i class="bi bi-arrow-left"></i> Back
-                </a>
-                <h5 class="mb-0">
-                    {% if other_user.profile.profile_picture %}
-                        <img src="{{ other_user.profile.profile_picture.url }}" class="rounded-circle" width="40" height="40" alt="{{ other_user.username }}">
+            <div class="card-header d-flex align-items-center gap-2 py-2">
+                <a href="{% url 'matches' %}" class="btn btn-outline-secondary btn-sm">&#8592; Back</a>
+
+                {% if other_user.profile.profile_picture %}
+                    <div class="position-relative d-inline-block">
+                        <img src="{{ other_user.profile.profile_picture.url }}"
+                             class="rounded-circle" width="40" height="40" alt="{{ other_display }}"
+                             style="object-fit:cover;">
+                        {% if other_user.profile.is_online %}
+                            <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle"
+                                  style="width:12px;height:12px;" title="Active now"></span>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="position-relative d-inline-block">
+                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center"
+                             style="width:40px;height:40px;font-size:1.3rem;">&#128100;</div>
+                        {% if other_user.profile.is_online %}
+                            <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle"
+                                  style="width:12px;height:12px;" title="Active now"></span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">{{ other_display }}</div>
+                    {% if other_user.profile.is_online %}
+                        <small class="text-success fw-semibold">Active now</small>
+                    {% elif other_user.profile.last_seen %}
+                        <small class="text-muted">Last seen {{ other_user.profile.last_seen|timesince }} ago</small>
                     {% endif %}
-                    {{ other_display }}
-                </h5>
+                </div>
             </div>
-            <div class="card-body" style="height: 400px; overflow-y: auto;" id="chat-messages">
+
+            <div class="card-body p-3" style="height:420px;overflow-y:auto;" id="chat-messages">
                 {% for message in messages %}
-                    <div class="d-flex {% if message.sender == request.user %}justify-content-end{% else %}justify-content-start{% endif %} mb-3" data-message-id="{{ message.id }}">
-                        <div class="card {% if message.sender == request.user %}bg-primary text-white{% else %}bg-light{% endif %}" style="max-width: 70%;">
-                            <div class="card-body py-2 px-3">
-                                {% if message.media_file %}
-                                    {% if message.media_type == 'image' %}
-                                        <img src="{{ message.media_file.url }}" class="img-fluid rounded mb-1 chat-media" alt="Shared image" style="max-height: 240px;">
-                                    {% elif message.media_type == 'video' %}
-                                        <video src="{{ message.media_file.url }}" class="rounded mb-1 chat-media" controls style="max-width: 100%; max-height: 240px;"></video>
-                                    {% endif %}
+                    <div class="d-flex {% if message.sender == request.user %}justify-content-end{% else %}justify-content-start{% endif %} mb-2"
+                         data-message-id="{{ message.id }}">
+                        <div class="rounded-3 px-3 py-2 {% if message.sender == request.user %}bg-primary text-white{% else %}bg-light{% endif %}"
+                             style="max-width:72%;">
+                            {% if message.media_file %}
+                                {% if message.media_type == 'image' %}
+                                    <img src="{{ message.media_file.url }}"
+                                         class="img-fluid rounded mb-1 chat-media"
+                                         style="max-height:240px;" alt="Shared image">
+                                {% elif message.media_type == 'video' %}
+                                    <video src="{{ message.media_file.url }}"
+                                           class="rounded mb-1 chat-media" controls
+                                           style="max-width:100%;max-height:240px;"></video>
                                 {% endif %}
-                                {% if message.content %}
+                            {% endif %}
+                            {% if message.content %}
+                                {% if message.content|slice:":5" == "📍 htt" or message.content|slice:":2" == "📍" %}
+                                    <p class="mb-1">
+                                        📍 <a href="{{ message.content|slice:'2:' }}"
+                                              target="_blank" rel="noopener"
+                                              class="{% if message.sender == request.user %}text-white{% endif %}">
+                                            View location on map
+                                        </a>
+                                    </p>
+                                {% else %}
                                     <p class="mb-1">{{ message.content }}</p>
                                 {% endif %}
-                                <small class="{% if message.sender == request.user %}text-white-50{% else %}text-muted{% endif %}">
-                                    {{ message.created_at|date:"H:i" }}
-                                </small>
-                            </div>
+                            {% endif %}
+                            <small class="{% if message.sender == request.user %}text-white-50{% else %}text-muted{% endif %}">
+                                {{ message.created_at|date:"H:i" }}
+                            </small>
                         </div>
                     </div>
                 {% empty %}
                     <div class="text-center text-muted py-5">
-                        <p>No messages yet. Start the conversation!</p>
+                        <p>No messages yet. Say hello!</p>
                     </div>
                 {% endfor %}
             </div>
-            <div class="card-footer">
+
+            <div class="card-footer p-2">
                 <form id="chat-form" class="d-flex gap-2 align-items-end" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input type="file" class="d-none" id="chat-media-input" name="media" accept="image/*,video/*">
-                    <button type="button" class="btn btn-outline-secondary" id="chat-attach-btn" title="Attach image or video">
-                        <i class="bi bi-paperclip"></i>
+
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-2" id="chat-attach-btn" title="Attach photo or video">
+                        &#128247;
                     </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-2" id="chat-location-btn" title="Share my location">
+                        &#128205;
+                    </button>
+
                     <div class="flex-grow-1">
                         <div id="chat-media-preview" class="small text-muted mb-1 d-none"></div>
-                        <input type="text" class="form-control" id="chat-content-input" name="content" placeholder="Type a message..." autofocus>
+                        <input type="text" class="form-control" id="chat-content-input"
+                               name="content" placeholder="Type a message…" autofocus>
                     </div>
-                    <button type="submit" class="btn btn-primary" id="chat-send-btn">
-                        <i class="bi bi-send"></i> Send
-                    </button>
+                    <button type="submit" class="btn btn-primary px-3" id="chat-send-btn">Send</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
 <script>
     document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+
+    document.getElementById('chat-location-btn').addEventListener('click', function () {
+        if (!navigator.geolocation) {
+            alert('Location sharing is not supported by your browser.');
+            return;
+        }
+        var btn = this;
+        btn.disabled = true;
+        btn.textContent = '...';
+        navigator.geolocation.getCurrentPosition(
+            function (pos) {
+                var lat = pos.coords.latitude.toFixed(6);
+                var lng = pos.coords.longitude.toFixed(6);
+                var mapUrl = 'https://www.openstreetmap.org/?mlat=' + lat + '&mlon=' + lng + '&zoom=16';
+                var locationContent = '\uD83D\uDCCD ' + mapUrl;
+                var input = document.getElementById('chat-content-input');
+                if (input) {
+                    input.value = locationContent;
+                    document.getElementById('chat-form').dispatchEvent(new Event('submit'));
+                }
+                btn.disabled = false;
+                btn.textContent = '\uD83D\uDCCD';
+            },
+            function (err) {
+                alert('Could not get your location. Please allow location access and try again.');
+                btn.disabled = false;
+                btn.textContent = '\uD83D\uDCCD';
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    });
 </script>
 {% endblock %}

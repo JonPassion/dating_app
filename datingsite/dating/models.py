@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
+from datetime import timedelta
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
@@ -44,6 +46,10 @@ class UserProfile(models.Model):
         default=False,
         help_text="Don't appear in browse results"
     )
+    last_seen = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Last time the user was active"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -51,10 +57,17 @@ class UserProfile(models.Model):
         indexes = [
             models.Index(fields=['hide_from_search', 'gender']),
             models.Index(fields=['-updated_at']),
+            models.Index(fields=['-last_seen']),
         ]
 
     def __str__(self):
         return f"{self.user.username}'s profile"
+
+    @property
+    def is_online(self):
+        if not self.last_seen:
+            return False
+        return timezone.now() - self.last_seen < timedelta(minutes=5)
 
     def is_complete(self):
         return bool(
