@@ -3,6 +3,10 @@
 
 {% block title %}Browse People - UniDate{% endblock %}
 
+{% block back_button %}
+<a href="{% url 'dashboard' %}" class="back-btn">&#8592; Home</a>
+{% endblock %}
+
 {% block content %}
 
 <div class="d-flex align-items-center justify-content-between mb-3">
@@ -98,9 +102,7 @@
                         {% else %}
                             <form method="post" action="{% url 'like_user' u.id %}" class="mb-2">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-like w-100 fw-bold">
-                                    &#10084; Like
-                                </button>
+                                <button type="submit" class="btn btn-like w-100 fw-bold">&#10084; Like</button>
                             </form>
                             <div class="d-flex gap-1">
                                 <form method="post" action="{% url 'dislike_user' u.id %}" class="flex-grow-1">

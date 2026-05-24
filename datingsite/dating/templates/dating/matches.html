@@ -2,6 +2,10 @@
 
 {% block title %}My Matches - UniDate{% endblock %}
 
+{% block back_button %}
+<a href="{% url 'dashboard' %}" class="back-btn">&#8592; Home</a>
+{% endblock %}
+
 {% block content %}
 
 <h4 class="text-white fw-bold mb-4">My Matches</h4>
@@ -9,14 +13,13 @@
 {% if match_entries %}
     <div class="d-flex flex-column gap-2">
         {% for entry in match_entries %}
-            <a href="{% url 'chat' entry.match.id %}"
-               class="text-decoration-none">
+            <a href="{% url 'chat' entry.match.id %}" class="text-decoration-none">
                 <div class="card {% if entry.unread_count %}border-danger{% endif %}">
                     <div class="card-body d-flex align-items-center gap-3 py-3">
 
                         <div class="position-relative flex-shrink-0">
                             {% if entry.other_user.profile.profile_picture %}
-                                <img src="{{ entry.other_user.profile.profile_picture.url }}"
+                                <img src="{{ entry.other_user.profile.profile_picture.url %}"
                                      class="avatar-sm" alt="{{ entry.display_name }}">
                             {% else %}
                                 <div class="avatar-sm-circle">&#128100;</div>
@@ -36,7 +39,6 @@
                                     <small class="text-success fw-semibold">&#9679; active</small>
                                 {% endif %}
                             </div>
-
                             {% if entry.last_message %}
                                 <div class="text-muted small text-truncate">
                                     {% if entry.last_message.content %}
@@ -52,9 +54,10 @@
                             {% else %}
                                 <div class="text-muted small fst-italic">No messages yet — say hello!</div>
                             {% endif %}
-
                             {% if entry.other_user.profile.major %}
-                                <div class="text-muted" style="font-size:0.75rem;">{{ entry.other_user.profile.major }}{% if entry.other_user.profile.campus %} &middot; {{ entry.other_user.profile.campus }}{% endif %}</div>
+                                <div class="text-muted" style="font-size:0.75rem;">
+                                    {{ entry.other_user.profile.major }}{% if entry.other_user.profile.campus %} &middot; {{ entry.other_user.profile.campus }}{% endif %}
+                                </div>
                             {% endif %}
                         </div>
 
@@ -64,7 +67,6 @@
                             {% endif %}
                             <span class="btn btn-primary btn-sm">Open chat</span>
                         </div>
-
                     </div>
                 </div>
             </a>

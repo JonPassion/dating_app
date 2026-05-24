@@ -2,20 +2,22 @@
 
 {% block auto_refresh %}off{% endblock %}
 
-{% block title %}Chat with {{ other_display }}{% endblock %}
+{% block title %}Chat with {{ other_display }} - UniDate{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'matches' %}" class="back-btn">&#8592; My Matches</a>
+{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center" data-chat-match-id="{{ match.id }}">
-    <div class="col-md-8">
+    <div class="col-md-9 col-lg-7">
         <div class="card">
             <div class="card-header d-flex align-items-center gap-2 py-2">
-                <a href="{% url 'matches' %}" class="btn btn-outline-secondary btn-sm">&#8592; Back</a>
-
                 {% if other_user.profile.profile_picture %}
                     <div class="position-relative d-inline-block">
                         <img src="{{ other_user.profile.profile_picture.url }}"
-                             class="rounded-circle" width="40" height="40" alt="{{ other_display }}"
-                             style="object-fit:cover;">
+                             class="rounded-circle" width="40" height="40"
+                             style="object-fit:cover;" alt="{{ other_display }}">
                         {% if other_user.profile.is_online %}
                             <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle"
                                   style="width:12px;height:12px;" title="Active now"></span>
@@ -60,7 +62,7 @@
                                 {% endif %}
                             {% endif %}
                             {% if message.content %}
-                                {% if message.content|slice:":5" == "📍 htt" or message.content|slice:":2" == "📍" %}
+                                {% if message.content|slice:":2" == "📍" %}
                                     <p class="mb-1">
                                         📍 <a href="{{ message.content|slice:'2:' }}"
                                               target="_blank" rel="noopener"
@@ -89,12 +91,10 @@
                     {% csrf_token %}
                     <input type="file" class="d-none" id="chat-media-input" name="media" accept="image/*,video/*">
 
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-2" id="chat-attach-btn" title="Attach photo or video">
-                        &#128247;
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-2" id="chat-location-btn" title="Share my location">
-                        &#128205;
-                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-2"
+                            id="chat-attach-btn" title="Attach photo or video">&#128247;</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-2"
+                            id="chat-location-btn" title="Share my location">&#128205;</button>
 
                     <div class="flex-grow-1">
                         <div id="chat-media-preview" class="small text-muted mb-1 d-none"></div>
@@ -124,16 +124,15 @@
                 var lat = pos.coords.latitude.toFixed(6);
                 var lng = pos.coords.longitude.toFixed(6);
                 var mapUrl = 'https://www.openstreetmap.org/?mlat=' + lat + '&mlon=' + lng + '&zoom=16';
-                var locationContent = '\uD83D\uDCCD ' + mapUrl;
                 var input = document.getElementById('chat-content-input');
                 if (input) {
-                    input.value = locationContent;
+                    input.value = '\uD83D\uDCCD ' + mapUrl;
                     document.getElementById('chat-form').dispatchEvent(new Event('submit'));
                 }
                 btn.disabled = false;
                 btn.textContent = '\uD83D\uDCCD';
             },
-            function (err) {
+            function () {
                 alert('Could not get your location. Please allow location access and try again.');
                 btn.disabled = false;
                 btn.textContent = '\uD83D\uDCCD';

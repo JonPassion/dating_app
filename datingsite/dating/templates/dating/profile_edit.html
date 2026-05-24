@@ -2,17 +2,13 @@
 
 {% block auto_refresh %}off{% endblock %}
 
-{% block title %}Edit Profile - University Dating App{% endblock %}
+{% block title %}Edit Profile - UniDate{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'profile_view' %}" class="back-btn">&#8592; My Profile</a>
+{% endblock %}
 
 {% block content %}
-<div class="row mb-3">
-    <div class="col-12">
-        <a href="{% url 'profile_view' %}" class="btn btn-outline-light">
-            <i class="bi bi-arrow-left"></i> Back to Profile
-        </a>
-    </div>
-</div>
-
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="card p-4">
@@ -20,7 +16,6 @@
 
             {% if not profile_complete %}
                 <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle"></i>
                     Complete your profile: set your gender, who you're looking for, and a bio or major to start browsing.
                 </div>
             {% endif %}
@@ -28,7 +23,7 @@
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
 
-                <h5 class="mb-3 text-muted"><i class="bi bi-person me-2"></i>Basic Info</h5>
+                <h5 class="mb-3 text-muted">Basic Info</h5>
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="{{ form.age.id_for_label }}" class="form-label">Age</label>
@@ -39,8 +34,7 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="{{ form.gender.id_for_label }}" class="form-label">Gender <span class="text-danger">*</span></label>
-                        <select class="form-select" name="{{ form.gender.name }}"
-                                id="{{ form.gender.id_for_label }}">
+                        <select class="form-select" name="{{ form.gender.name }}" id="{{ form.gender.id_for_label }}">
                             <option value="">Select gender</option>
                             <option value="male" {% if form.gender.value == 'male' %}selected{% endif %}>Male</option>
                             <option value="female" {% if form.gender.value == 'female' %}selected{% endif %}>Female</option>
@@ -50,8 +44,7 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="{{ form.looking_for.id_for_label }}" class="form-label">Looking For <span class="text-danger">*</span></label>
-                        <select class="form-select" name="{{ form.looking_for.name }}"
-                                id="{{ form.looking_for.id_for_label }}">
+                        <select class="form-select" name="{{ form.looking_for.name }}" id="{{ form.looking_for.id_for_label }}">
                             <option value="">Select preference</option>
                             <option value="male" {% if form.looking_for.value == 'male' %}selected{% endif %}>Male</option>
                             <option value="female" {% if form.looking_for.value == 'female' %}selected{% endif %}>Female</option>
@@ -77,9 +70,7 @@
                                min="1" max="6">
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label for="{{ form.campus.id_for_label }}" class="form-label">
-                            <i class="bi bi-geo-alt"></i> Campus
-                        </label>
+                        <label for="{{ form.campus.id_for_label }}" class="form-label">Campus</label>
                         <input type="text" class="form-control" name="{{ form.campus.name }}"
                                id="{{ form.campus.id_for_label }}"
                                value="{{ form.campus.value|default:'' }}"
@@ -89,7 +80,7 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="{{ form.bio.id_for_label }}" class="form-label">Bio <span class="text-danger">*</span><small class="text-muted fw-normal"> (or fill in Major)</small></label>
+                    <label for="{{ form.bio.id_for_label }}" class="form-label">Bio <span class="text-danger">*</span> <small class="text-muted fw-normal">(or fill in Major)</small></label>
                     <textarea class="form-control" name="{{ form.bio.name }}"
                               id="{{ form.bio.id_for_label }}" rows="4"
                               placeholder="Tell others about yourself…">{{ form.bio.value|default:'' }}</textarea>
@@ -117,7 +108,7 @@
                 </div>
 
                 <hr class="my-4">
-                <h5 class="mb-3"><i class="bi bi-shield-lock"></i> Privacy Settings</h5>
+                <h5 class="mb-3">Privacy Settings</h5>
 
                 <div class="mb-3">
                     <div class="form-check form-switch">
@@ -127,7 +118,7 @@
                                {% if form.anonymous_mode.value %}checked{% endif %}>
                         <label class="form-check-label" for="{{ form.anonymous_mode.id_for_label }}">
                             <strong>Anonymous Mode</strong><br>
-                            <small class="text-muted">Hide your username and use an anonymous ID. Profile details are only revealed after matching.</small>
+                            <small class="text-muted">Hide your username. Profile details are only revealed after matching.</small>
                         </label>
                     </div>
                 </div>
@@ -145,9 +136,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 py-2">
-                    <i class="bi bi-check-circle me-2"></i>Save Profile
-                </button>
+                <button type="submit" class="btn btn-primary w-100 py-2">Save Profile</button>
             </form>
         </div>
     </div>
@@ -156,7 +145,7 @@
 <div class="row justify-content-center mt-4">
     <div class="col-md-8">
         <div class="card p-4">
-            <h5 class="mb-3"><i class="bi bi-images"></i> Media Gallery</h5>
+            <h5 class="mb-3">Media Gallery</h5>
             <p class="text-muted small">Upload pictures and videos (up to 20 MB)</p>
 
             <form method="post" enctype="multipart/form-data" class="mb-4">
@@ -164,8 +153,7 @@
                 <div class="row g-2 align-items-end">
                     <div class="col-md-3">
                         <label for="{{ media_form.media_type.id_for_label }}" class="form-label">Type</label>
-                        <select class="form-select" name="{{ media_form.media_type.name }}"
-                                id="{{ media_form.media_type.id_for_label }}">
+                        <select class="form-select" name="{{ media_form.media_type.name }}" id="{{ media_form.media_type.id_for_label }}">
                             <option value="image">Image</option>
                             <option value="video">Video</option>
                         </select>
@@ -182,9 +170,7 @@
                                id="{{ media_form.caption.id_for_label }}" placeholder="Optional">
                     </div>
                 </div>
-                <button type="submit" name="upload_media" class="btn btn-success mt-3">
-                    <i class="bi bi-upload"></i> Upload
-                </button>
+                <button type="submit" name="upload_media" class="btn btn-success mt-3">Upload</button>
             </form>
 
             {% if media_gallery %}
@@ -205,9 +191,7 @@
                                     {% endif %}
                                     <form method="post" action="{% url 'delete_media' media.id %}">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-danger w-100">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </button>
+                                        <button type="submit" class="btn btn-sm btn-danger w-100">Delete</button>
                                     </form>
                                 </div>
                             </div>

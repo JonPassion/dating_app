@@ -2,6 +2,10 @@
 
 {% block title %}People Who Liked You - UniDate{% endblock %}
 
+{% block back_button %}
+<a href="{% url 'dashboard' %}" class="back-btn">&#8592; Home</a>
+{% endblock %}
+
 {% block content %}
 
 <h4 class="text-white fw-bold mb-4">People Who Liked You</h4>
@@ -14,7 +18,6 @@
             <div class="col">
                 <div class="card h-100 text-center">
                     <div class="bg-danger text-white small py-1 fw-semibold rounded-top">&#10084; Likes you!</div>
-
                     <div class="pt-3 pb-2 px-2">
                         <div class="position-relative d-inline-block mb-2">
                             {% if p.profile_picture %}
@@ -29,33 +32,24 @@
                                       style="width:16px;height:16px;" title="Active now"></span>
                             {% endif %}
                         </div>
-
                         <div class="fw-semibold">{{ entry.display_name }}</div>
                         {% if p.is_online %}
                             <div class="text-success small fw-semibold">&#9679; Active now</div>
                         {% endif %}
-
                         {% if p.anonymous_mode %}
                             <div class="text-muted small fst-italic">Like back to see details</div>
                         {% else %}
-                            {% if p.major %}
-                                <div class="text-muted small">{{ p.major }}{% if p.year %}, Year {{ p.year }}{% endif %}</div>
-                            {% endif %}
-                            {% if p.campus %}
-                                <div class="text-muted small">{{ p.campus }}</div>
-                            {% endif %}
+                            {% if p.major %}<div class="text-muted small">{{ p.major }}{% if p.year %}, Year {{ p.year }}{% endif %}</div>{% endif %}
+                            {% if p.campus %}<div class="text-muted small">{{ p.campus }}</div>{% endif %}
                         {% endif %}
                     </div>
-
                     <div class="pb-3 px-2 mt-auto">
                         {% if entry.already_matched %}
                             <a href="{% url 'matches' %}" class="btn btn-success w-100 fw-bold">Send a Message</a>
                         {% else %}
                             <form method="post" action="{% url 'like_user' entry.user.id %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-like w-100 fw-bold">
-                                    &#10084; Like Back
-                                </button>
+                                <button type="submit" class="btn btn-like w-100 fw-bold">&#10084; Like Back</button>
                             </form>
                         {% endif %}
                     </div>

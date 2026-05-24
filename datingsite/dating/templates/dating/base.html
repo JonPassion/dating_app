@@ -9,31 +9,157 @@
     <link rel="manifest" href="{% static 'manifest.json' %}">
     <meta name="theme-color" content="#764ba2">
     <style>
+        :root { --sidebar-w: 230px; --topbar-h: 58px; --bottom-nav-h: 64px; }
+
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             font-size: 1.05rem;
         }
+
+        /* ── Top bar ── */
+        .topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: var(--topbar-h);
+            background: rgba(255,255,255,0.97);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.10);
+            display: flex;
+            align-items: center;
+            padding: 0 1.2rem;
+            z-index: 200;
+        }
+        .topbar-brand {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #764ba2;
+            text-decoration: none;
+            flex: 1;
+        }
+        .topbar-brand:hover { color: #667eea; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed;
+            top: var(--topbar-h);
+            left: 0;
+            bottom: 0;
+            width: var(--sidebar-w);
+            background: rgba(255,255,255,0.97);
+            box-shadow: 2px 0 14px rgba(0,0,0,0.10);
+            padding: 1.2rem 0.8rem;
+            overflow-y: auto;
+            z-index: 150;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.65rem 0.9rem;
+            border-radius: 12px;
+            font-weight: 500;
+            color: #444;
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+            font-size: 1rem;
+        }
+        .sidebar-link:hover { background: rgba(102,126,234,0.10); color: #667eea; }
+        .sidebar-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+        }
+        .sidebar-icon { font-size: 1.25rem; width: 26px; text-align: center; flex-shrink: 0; }
+        .sidebar-divider { border-top: 1px solid #eee; margin: 0.6rem 0; }
+        .sidebar-logout {
+            margin-top: auto;
+            padding-top: 0.8rem;
+            border-top: 1px solid #eee;
+        }
+
+        /* ── Main content ── */
+        .main-content {
+            margin-left: var(--sidebar-w);
+            margin-top: var(--topbar-h);
+            padding: 1.5rem 1.4rem 2rem;
+            min-height: calc(100vh - var(--topbar-h));
+        }
+
+        /* ── Back button ── */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.25);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 6px 18px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 1rem;
+            transition: background 0.15s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.4); color: white; }
+
+        /* ── Bottom nav (mobile only) ── */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: var(--bottom-nav-h);
+            background: rgba(255,255,255,0.98);
+            box-shadow: 0 -2px 14px rgba(0,0,0,0.12);
+            z-index: 200;
+        }
+        .bottom-nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.68rem;
+            font-weight: 600;
+            gap: 3px;
+            padding: 6px 0;
+            border-radius: 0;
+            transition: color 0.15s;
+        }
+        .bottom-nav-item .bn-icon { font-size: 1.4rem; line-height: 1; }
+        .bottom-nav-item.active { color: #764ba2; }
+        .bottom-nav-item:hover { color: #667eea; }
+
+        @media (max-width: 991px) {
+            .sidebar { display: none !important; }
+            .bottom-nav { display: flex !important; }
+            .main-content {
+                margin-left: 0;
+                padding: 1rem 0.9rem calc(var(--bottom-nav-h) + 1rem);
+            }
+        }
+
+        /* ── Cards / Buttons ── */
         .card {
             border: none;
             border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
         }
-        .navbar {
-            background: rgba(255,255,255,0.97) !important;
-        }
+        .stat-card { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.18); }
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
         }
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-        }
+        .btn-primary:hover { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); }
         .btn-like {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            border: none;
+            color: white; border: none;
             font-size: 1.3rem;
             padding: 0.6rem 2rem;
             border-radius: 50px;
@@ -47,59 +173,25 @@
             font-size: 1rem;
         }
         .btn-skip:hover { border-color: #999; color: #555; }
-        .nav-link {
-            font-size: 1rem;
-            font-weight: 500;
-            border-radius: 8px;
-            margin: 0 2px;
-            padding: 6px 14px !important;
-        }
-        .nav-link:hover { background: rgba(102,126,234,0.1); }
-        .nav-link.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white !important;
-        }
         .profile-img {
-            width: 120px;
-            height: 120px;
-            object-fit: cover;
-            border-radius: 50%;
+            width: 120px; height: 120px;
+            object-fit: cover; border-radius: 50%;
             border: 4px solid white;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         .avatar-circle {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
+            width: 120px; height: 120px; border-radius: 50%;
             background: #adb5bd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; color: white;
             border: 4px solid white;
         }
-        .avatar-sm {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
+        .avatar-sm { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
         .avatar-sm-circle {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
+            width: 48px; height: 48px; border-radius: 50%;
             background: #adb5bd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            color: white;
-            flex-shrink: 0;
-        }
-        @media (max-width: 768px) {
-            .container { padding-left: 12px; padding-right: 12px; }
-            .card { margin-bottom: 14px; }
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; color: white; flex-shrink: 0;
         }
     </style>
 </head>
@@ -109,78 +201,124 @@
     data-auto-refresh="{% block auto_refresh %}on{% endblock %}"
     {% endif %}
 >
-    <nav class="navbar navbar-expand-lg navbar-light sticky-top shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold fs-4" href="{% url 'home' %}">
-                &#10084; UniDate
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-lg-center">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'browse' %}active{% endif %}"
-                               href="{% url 'browse' %}">Browse People</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'matches' or request.resolver_match.url_name == 'chat' %}active{% endif %}"
-                               href="{% url 'matches' %}">
-                                My Matches
-                                <span id="nav-unread-badge" class="badge bg-danger ms-1 d-none">0</span>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'profile_view' or request.resolver_match.url_name == 'profile_edit' %}active{% endif %}"
-                               href="{% url 'profile_view' %}">My Profile</a>
-                        </li>
-                        <li class="nav-item ms-lg-2">
-                            <form method="post" action="{% url 'logout' %}" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-secondary btn-sm px-3">
-                                    Log out
-                                </button>
-                            </form>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.url_name == 'login' %}active{% endif %}"
-                               href="{% url 'login' %}">Log in</a>
-                        </li>
-                        <li class="nav-item ms-lg-2">
-                            <a class="btn btn-primary px-4"
-                               href="{% url 'register' %}">Sign Up Free</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container py-4">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        {% block content %}{% endblock %}
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- ── Top bar ── -->
+<div class="topbar">
+    <a class="topbar-brand" href="{% url 'home' %}">&#10084; UniDate</a>
     {% if user.is_authenticated %}
-    <script src="{% static 'js/realtime.js' %}"></script>
+        <form method="post" action="{% url 'logout' %}" class="d-none d-lg-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary btn-sm px-3">Log out</button>
+        </form>
+    {% else %}
+        <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-sm me-2">Log in</a>
+        <a href="{% url 'register' %}" class="btn btn-primary btn-sm px-3">Sign Up Free</a>
     {% endif %}
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register("{% static 'sw.js' %}")
-                .then(function () {})
-                .catch(function () {});
-        }
-    </script>
+</div>
+
+{% if user.is_authenticated %}
+<!-- ── Left Sidebar ── -->
+<nav class="sidebar">
+    <a href="{% url 'dashboard' %}"
+       class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <span class="sidebar-icon">&#127968;</span> Home
+    </a>
+    <a href="{% url 'browse' %}"
+       class="sidebar-link {% if request.resolver_match.url_name == 'browse' %}active{% endif %}">
+        <span class="sidebar-icon">&#128269;</span> Browse People
+    </a>
+    <a href="{% url 'matches' %}"
+       class="sidebar-link {% if request.resolver_match.url_name == 'matches' or request.resolver_match.url_name == 'chat' %}active{% endif %}">
+        <span class="sidebar-icon">&#128172;</span>
+        My Matches
+        <span id="nav-unread-badge" class="badge bg-danger ms-auto d-none">0</span>
+    </a>
+    <a href="{% url 'likes_received' %}"
+       class="sidebar-link {% if request.resolver_match.url_name == 'likes_received' %}active{% endif %}">
+        <span class="sidebar-icon">&#10084;</span> Liked Me
+    </a>
+    <a href="{% url 'profile_view' %}"
+       class="sidebar-link {% if request.resolver_match.url_name == 'profile_view' or request.resolver_match.url_name == 'profile_edit' %}active{% endif %}">
+        <span class="sidebar-icon">&#128100;</span> My Profile
+    </a>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-logout">
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="sidebar-link w-100 border-0 bg-transparent text-danger fw-semibold">
+                <span class="sidebar-icon">&#128682;</span> Log out
+            </button>
+        </form>
+    </div>
+</nav>
+
+<!-- ── Bottom nav (mobile) ── -->
+<nav class="bottom-nav">
+    <a href="{% url 'dashboard' %}"
+       class="bottom-nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <span class="bn-icon">&#127968;</span>Home
+    </a>
+    <a href="{% url 'browse' %}"
+       class="bottom-nav-item {% if request.resolver_match.url_name == 'browse' %}active{% endif %}">
+        <span class="bn-icon">&#128269;</span>Browse
+    </a>
+    <a href="{% url 'matches' %}"
+       class="bottom-nav-item {% if request.resolver_match.url_name == 'matches' or request.resolver_match.url_name == 'chat' %}active{% endif %}">
+        <span class="bn-icon">&#128172;</span>Matches
+        <span id="nav-unread-badge-mob" class="badge bg-danger d-none" style="font-size:0.6rem;">0</span>
+    </a>
+    <a href="{% url 'likes_received' %}"
+       class="bottom-nav-item {% if request.resolver_match.url_name == 'likes_received' %}active{% endif %}">
+        <span class="bn-icon">&#10084;</span>Liked Me
+    </a>
+    <a href="{% url 'profile_view' %}"
+       class="bottom-nav-item {% if request.resolver_match.url_name == 'profile_view' or request.resolver_match.url_name == 'profile_edit' %}active{% endif %}">
+        <span class="bn-icon">&#128100;</span>Profile
+    </a>
+</nav>
+{% endif %}
+
+<!-- ── Main content ── -->
+<main class="main-content">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-3 mb-3" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% block back_button %}{% endblock %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% if user.is_authenticated %}
+<script src="{% static 'js/realtime.js' %}"></script>
+<script>
+    // Sync the mobile bottom nav badge with the desktop sidebar badge
+    (function () {
+        const src = document.getElementById('nav-unread-badge');
+        const mob = document.getElementById('nav-unread-badge-mob');
+        if (!src || !mob) return;
+        const observer = new MutationObserver(function () {
+            mob.textContent = src.textContent;
+            if (src.classList.contains('d-none')) mob.classList.add('d-none');
+            else mob.classList.remove('d-none');
+        });
+        observer.observe(src, { childList: true, attributes: true, attributeFilter: ['class'] });
+    })();
+</script>
+{% endif %}
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register("{% static 'sw.js' %}")
+            .then(function () {}).catch(function () {});
+    }
+</script>
 </body>
 </html>

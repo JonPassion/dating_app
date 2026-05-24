@@ -1,28 +1,31 @@
 {% extends 'dating/base.html' %}
 {% load dating_extras %}
 
-{% block title %}{{ display_name }} - University Dating App{% endblock %}
+{% block title %}{{ display_name }} - UniDate{% endblock %}
+
+{% block back_button %}
+<a href="{% url 'browse' %}" class="back-btn">&#8592; Browse People</a>
+{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
         <div class="card p-4">
-            <a href="{% url 'browse' %}" class="btn btn-outline-secondary btn-sm mb-3">
-                <i class="bi bi-arrow-left"></i> Back to Browse
-            </a>
-
             <div class="text-center mb-4">
                 {% if profile.profile_picture %}
-                    <img src="{{ profile.profile_picture.url }}" class="profile-img {% if not can_see_full %}blur-image{% endif %}" alt="{{ display_name }}">
+                    <img src="{{ profile.profile_picture.url }}"
+                         class="profile-img {% if not can_see_full %}blur-image{% endif %}"
+                         alt="{{ display_name }}">
                 {% else %}
-                    <div class="profile-img d-flex align-items-center justify-content-center bg-secondary text-white mx-auto">
-                        <i class="bi bi-person fs-1"></i>
-                    </div>
+                    <div class="avatar-circle mx-auto">&#128100;</div>
                 {% endif %}
 
                 <h2 class="mt-3">{{ display_name }}</h2>
+                {% if profile.is_online %}
+                    <div class="text-success fw-semibold mb-1">&#9679; Active now</div>
+                {% endif %}
                 {% if not can_see_full %}
-                    <p class="text-muted"><i class="bi bi-shield-lock"></i> Anonymous mode — match to see their full profile</p>
+                    <p class="text-muted">Anonymous mode — match to see their full profile</p>
                 {% elif profile.major %}
                     <p class="text-muted">{{ profile.major }}{% if profile.year %} - Year {{ profile.year }}{% endif %}</p>
                 {% endif %}
@@ -44,6 +47,7 @@
                             {% if profile.age %}<li><strong>Age:</strong> {{ profile.age }}</li>{% endif %}
                             {% if profile.gender %}<li><strong>Gender:</strong> {{ profile.get_gender_display }}</li>{% endif %}
                             {% if profile.looking_for %}<li><strong>Looking for:</strong> {{ profile.get_looking_for_display }}</li>{% endif %}
+                            {% if profile.campus %}<li><strong>Campus:</strong> {{ profile.campus }}</li>{% endif %}
                         </ul>
                     </div>
                 </div>
@@ -61,15 +65,17 @@
 
                 {% if media_gallery %}
                     <div class="mt-4">
-                        <h5><i class="bi bi-images"></i> Media Gallery</h5>
+                        <h5>Photos &amp; Videos</h5>
                         <div class="row">
                             {% for media in media_gallery %}
                                 <div class="col-md-4 mb-3">
                                     <div class="card">
                                         {% if media.media_type == 'image' %}
-                                            <img src="{{ media.file.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ media.caption }}">
+                                            <img src="{{ media.file.url }}" class="card-img-top"
+                                                 style="height:200px;object-fit:cover;" alt="{{ media.caption }}">
                                         {% else %}
-                                            <video src="{{ media.file.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" controls></video>
+                                            <video src="{{ media.file.url }}" class="card-img-top"
+                                                   style="height:200px;object-fit:cover;" controls></video>
                                         {% endif %}
                                         {% if media.caption %}
                                             <div class="card-body p-2">
@@ -84,13 +90,11 @@
                 {% endif %}
             {% else %}
                 <div class="alert alert-info text-center mb-0">
-                    <i class="bi bi-info-circle"></i> Limited profile view. Like each other to unlock full details, photos, and gallery.
+                    Limited profile view. Like each other to unlock full details, photos, and gallery.
                 </div>
             {% endif %}
         </div>
     </div>
 </div>
-<style>
-.blur-image { filter: blur(15px); }
-</style>
+<style>.blur-image { filter: blur(15px); }</style>
 {% endblock %}
