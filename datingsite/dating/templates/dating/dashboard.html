@@ -28,28 +28,40 @@
 
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-3">
-        <div class="card text-center py-3">
-            <div class="fw-bold fs-2 text-danger">{{ matches_count }}</div>
-            <div class="text-muted small">Matches</div>
-        </div>
+        <a href="{% url 'matches' %}" class="text-decoration-none">
+            <div class="card text-center py-3 h-100 stat-card">
+                <div class="fw-bold fs-2 text-danger" data-stat="matches_count">{{ matches_count }}</div>
+                <div class="text-muted small">Matches</div>
+                <div class="text-muted" style="font-size:0.7rem;">tap to view</div>
+            </div>
+        </a>
     </div>
     <div class="col-6 col-md-3">
-        <div class="card text-center py-3">
-            <div class="fw-bold fs-2 text-primary">{{ likes_received }}</div>
-            <div class="text-muted small">People liked you</div>
-        </div>
+        <a href="{% url 'likes_received' %}" class="text-decoration-none">
+            <div class="card text-center py-3 h-100 stat-card">
+                <div class="fw-bold fs-2 text-primary" data-stat="likes_received">{{ likes_received }}</div>
+                <div class="text-muted small">People liked you</div>
+                <div class="text-muted" style="font-size:0.7rem;">tap to see who</div>
+            </div>
+        </a>
     </div>
     <div class="col-6 col-md-3">
-        <div class="card text-center py-3">
-            <div class="fw-bold fs-2 text-success" data-stat="unread_messages">{{ unread_messages }}</div>
-            <div class="text-muted small">Unread messages</div>
-        </div>
+        <a href="{% url 'matches' %}" class="text-decoration-none">
+            <div class="card text-center py-3 h-100 stat-card">
+                <div class="fw-bold fs-2 text-success" data-stat="unread_messages">{{ unread_messages }}</div>
+                <div class="text-muted small">Unread messages</div>
+                <div class="text-muted" style="font-size:0.7rem;">tap to read &amp; reply</div>
+            </div>
+        </a>
     </div>
     <div class="col-6 col-md-3">
-        <div class="card text-center py-3">
-            <div class="fw-bold fs-2 text-warning">{{ likes_given }}</div>
-            <div class="text-muted small">You liked</div>
-        </div>
+        <a href="{% url 'browse' %}" class="text-decoration-none">
+            <div class="card text-center py-3 h-100 stat-card">
+                <div class="fw-bold fs-2 text-warning" data-stat="likes_given">{{ likes_given }}</div>
+                <div class="text-muted small">You liked</div>
+                <div class="text-muted" style="font-size:0.7rem;">tap to browse</div>
+            </div>
+        </a>
     </div>
 </div>
 
@@ -72,18 +84,39 @@
     <div class="list-group list-group-flush">
         {% for chat in recent_chats %}
             <a href="{% url 'chat' chat.match.id %}"
-               class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3">
-                {% if chat.other_user.profile.profile_picture %}
-                    <img src="{{ chat.other_user.profile.profile_picture.url }}" class="avatar-sm" alt="">
-                {% else %}
-                    <div class="avatar-sm-circle small">&#128100;</div>
-                {% endif %}
+               class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3 {% if chat.unread_count %}fw-semibold{% endif %}">
+                <div class="position-relative flex-shrink-0">
+                    {% if chat.other_user.profile.profile_picture %}
+                        <img src="{{ chat.other_user.profile.profile_picture.url }}" class="avatar-sm" alt="">
+                    {% else %}
+                        <div class="avatar-sm-circle small">&#128100;</div>
+                    {% endif %}
+                    {% if chat.other_user.profile.is_online %}
+                        <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle"
+                              style="width:10px;height:10px;"></span>
+                    {% endif %}
+                </div>
                 <div class="flex-grow-1 overflow-hidden">
-                    <div class="fw-semibold">{{ chat.other_display }}</div>
-                    <div class="text-muted small text-truncate">{{ chat.last_message.content }}</div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span>{{ chat.other_display }}</span>
+                        {% if chat.other_user.profile.is_online %}
+                            <small class="text-success fw-normal">&#9679; active</small>
+                        {% endif %}
+                    </div>
+                    <div class="text-muted small text-truncate fw-normal">
+                        {% if chat.last_message.content %}
+                            {% if chat.last_message.content|slice:":2" == "📍" %}
+                                📍 Shared a location
+                            {% else %}
+                                {{ chat.last_message.content }}
+                            {% endif %}
+                        {% else %}
+                            Shared a photo/video
+                        {% endif %}
+                    </div>
                 </div>
                 {% if chat.unread_count %}
-                    <span class="badge bg-danger rounded-pill">{{ chat.unread_count }}</span>
+                    <span class="badge bg-danger rounded-pill flex-shrink-0">{{ chat.unread_count }}</span>
                 {% endif %}
             </a>
         {% endfor %}

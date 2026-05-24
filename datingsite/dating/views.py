@@ -283,11 +283,21 @@ def matches(request):
     enriched = []
     for match in match_list:
         other = match.user2 if match.user1 == request.user else match.user1
+        unread = match.messages.filter(sender=other, read=False).count()
+        last_msg = match.messages.order_by('-created_at').first()
         enriched.append({
             'match': match,
             'other_user': other,
             'display_name': display_name(other, request.user, is_matched=True),
+            'unread_count': unread,
+            'last_message': last_msg,
         })
+
+    # Sort: unread first, then by most recent message
+    enriched.sort(key=lambda e: (
+        0 if e['unread_count'] else 1,
+        -(e['last_message'].created_at.timestamp() if e['last_message'] else 0)
+    ))
 
     return render(request, 'dating/matches.html', {'match_entries': enriched})
 
@@ -385,3 +395,37 @@ def like_post_view(request, post_id):
     else:
         post.likes.add(request.user)
     return redirect('dashboard')
+
+
+@login_required
+@profile_complete_required
+def likes_received(request):
+    """Show users who have liked the current user."""
+    likers_qs = Like.objects.filter(
+        to_user=request.user
+    ).select_related('from_user', 'from_user__profile').order_by('-created_at')
+
+    matched_user_ids = set(
+        Match.objects.filter(
+            Q(user1=request.user) | Q(user2=request.user)
+        ).values_list('user1_id', 'user2_id')
+        .__iter__()
+    )
+    # Flatten the set of tuples
+    flat_matched = set()
+    for pair in Match.objects.filter(
+        Q(user1=request.user) | Q(user2=request.user)
+    ).values_list('user1_id', 'user2_id'):
+        flat_matched.update(pair)
+    flat_matched.discard(request.user.id)
+
+    likers = []
+    for like in likers_qs:
+        u = like.from_user
+        likers.append({
+            'user': u,
+            'display_name': display_name(u, request.user, is_matched=(u.id in flat_matched)),
+            'already_matched': u.id in flat_matched,
+        })
+
+    return render(request, 'dating/likes_received.html', {'likers': likers})

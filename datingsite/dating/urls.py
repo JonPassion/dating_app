@@ -18,6 +18,7 @@ urlpatterns = [
     path('chat/<int:match_id>/', views.chat, name='chat'),
     path('profile/<int:user_id>/', views.view_profile, name='view_profile'),
     path('posts/<int:post_id>/like/', views.like_post_view, name='like_post'),
+    path('likes/received/', views.likes_received, name='likes_received'),
 
     # API Routes
     path('api/auth/register/', api_views.RegisterView.as_view(), name='api_register'),

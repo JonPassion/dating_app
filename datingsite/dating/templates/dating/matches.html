@@ -7,11 +7,13 @@
 <h4 class="text-white fw-bold mb-4">My Matches</h4>
 
 {% if match_entries %}
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+    <div class="d-flex flex-column gap-2">
         {% for entry in match_entries %}
-            <div class="col">
-                <div class="card h-100">
-                    <div class="card-body d-flex align-items-center gap-3">
+            <a href="{% url 'chat' entry.match.id %}"
+               class="text-decoration-none">
+                <div class="card {% if entry.unread_count %}border-danger{% endif %}">
+                    <div class="card-body d-flex align-items-center gap-3 py-3">
+
                         <div class="position-relative flex-shrink-0">
                             {% if entry.other_user.profile.profile_picture %}
                                 <img src="{{ entry.other_user.profile.profile_picture.url }}"
@@ -26,27 +28,46 @@
                         </div>
 
                         <div class="flex-grow-1 overflow-hidden">
-                            <div class="fw-bold">{{ entry.display_name }}</div>
-                            {% if entry.other_user.profile.is_online %}
-                                <div class="text-success small fw-semibold">&#9679; Active now</div>
-                            {% elif entry.other_user.profile.last_seen %}
-                                <div class="text-muted small">Last seen {{ entry.other_user.profile.last_seen|timesince }} ago</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold {% if entry.unread_count %}text-danger{% else %}text-dark{% endif %}">
+                                    {{ entry.display_name }}
+                                </span>
+                                {% if entry.other_user.profile.is_online %}
+                                    <small class="text-success fw-semibold">&#9679; active</small>
+                                {% endif %}
+                            </div>
+
+                            {% if entry.last_message %}
+                                <div class="text-muted small text-truncate">
+                                    {% if entry.last_message.content %}
+                                        {% if entry.last_message.content|slice:":2" == "📍" %}
+                                            📍 Shared a location
+                                        {% else %}
+                                            {% if entry.last_message.sender == request.user %}You: {% endif %}{{ entry.last_message.content }}
+                                        {% endif %}
+                                    {% else %}
+                                        {% if entry.last_message.sender == request.user %}You: {% endif %}Shared a photo/video
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <div class="text-muted small fst-italic">No messages yet — say hello!</div>
                             {% endif %}
+
                             {% if entry.other_user.profile.major %}
-                                <div class="text-muted small">{{ entry.other_user.profile.major }}</div>
-                            {% endif %}
-                            {% if entry.other_user.profile.campus %}
-                                <div class="text-muted small">{{ entry.other_user.profile.campus }}</div>
+                                <div class="text-muted" style="font-size:0.75rem;">{{ entry.other_user.profile.major }}{% if entry.other_user.profile.campus %} &middot; {{ entry.other_user.profile.campus }}{% endif %}</div>
                             {% endif %}
                         </div>
 
-                        <a href="{% url 'chat' entry.match.id %}"
-                           class="btn btn-primary px-3 fw-semibold flex-shrink-0">
-                            Message
-                        </a>
+                        <div class="flex-shrink-0 text-end">
+                            {% if entry.unread_count %}
+                                <span class="badge bg-danger rounded-pill mb-1 d-block">{{ entry.unread_count }} new</span>
+                            {% endif %}
+                            <span class="btn btn-primary btn-sm">Open chat</span>
+                        </div>
+
                     </div>
                 </div>
-            </div>
+            </a>
         {% endfor %}
     </div>
 {% else %}
