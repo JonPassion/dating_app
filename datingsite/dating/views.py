@@ -102,14 +102,23 @@ def register(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
     if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
+        form = UserRegisterForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
-            get_user_profile(user)
-            username = form.cleaned_data.get('username')
-            messages.success(request, f'Account created for {username}!')
+            profile = get_user_profile(user)
+            profile.age = form.cleaned_data.get('age')
+            profile.gender = form.cleaned_data.get('gender')
+            profile.looking_for = form.cleaned_data.get('looking_for')
+            profile.major = form.cleaned_data.get('major') or ''
+            profile.year = form.cleaned_data.get('year')
+            profile.campus = form.cleaned_data.get('campus') or ''
+            profile.bio = form.cleaned_data.get('bio') or ''
+            if form.cleaned_data.get('profile_picture'):
+                profile.profile_picture = form.cleaned_data['profile_picture']
+            profile.save()
+            messages.success(request, f'Welcome to UniDate, {user.username}!')
             login(request, user)
-            return redirect('profile_edit')
+            return redirect('dashboard')
     else:
         form = UserRegisterForm()
     return render(request, 'dating/register.html', {'form': form})
